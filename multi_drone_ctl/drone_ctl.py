@@ -2,28 +2,32 @@
 import threading
 import time
 import rclpy
+import math
+import random
+import yaml
 
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
+from std_msgs.msg import Float32
 from px4_msgs.msg import OffboardControlMode, TrajectorySetpoint, VehicleCommand, VehicleLocalPosition, VehicleStatus
+
+qos_profile = QoSProfile(
+    reliability=ReliabilityPolicy.BEST_EFFORT,
+    durability=DurabilityPolicy.TRANSIENT_LOCAL,
+    history=HistoryPolicy.KEEP_LAST,
+    depth=1
+)
 
 class OffboardControl(Node):
     """Node for controlling a vehicle in offboard mode."""
 
     def __init__(self, prefix: str, target_system: int) -> None:
-        super().__init__(f'offboard_control_drone_{target_system - 1}')
+        super().__init__(f'offboard_control_drone_{target_system}')
 
         self.prefix = prefix
         self.target_system = target_system
         self.get_logger().warn(f'{prefix} + {target_system}')
-
-        qos_profile = QoSProfile(
-            reliability=ReliabilityPolicy.BEST_EFFORT,
-            durability=DurabilityPolicy.TRANSIENT_LOCAL,
-            history=HistoryPolicy.KEEP_LAST,
-            depth=1
-        )
 
         # Create publishers
         self.offboard_control_mode_publisher = self.create_publisher(
@@ -118,48 +122,123 @@ class OffboardControl(Node):
 
         if self.offboard_setpoint_counter < 11:
             self.offboard_setpoint_counter += 1
-    
-class DroneController():
-    """Controller for managing multiple drones."""
 
-    def __init__(self, drones):
+class BLEbeacon(Node):
+    def __init__(self, position = (0.0, 0.0, 0.0), \
+                    prefix: str = '', \
+                    target_system: int = 1, 
+                    name: str = '',
+                    rssi_settings: dict = None) -> None:
+        super().__init__(f'ble_beacon_{name}_drone_{target_system}')
+
+        self.subscription = self.create_subscription(
+            VehicleLocalPosition,
+            f'{prefix}/fmu/out/vehicle_local_position',
+            self.listener_callback,
+            qos_profile
+        )
+
+        self.rssi_publisher = self.create_publisher(Float32, f'/ble{prefix}/beacon_{name}/rssi', qos_profile)
+
+        self.position = position
+
+        # 模擬參數
+        self.rssi0 = rssi_settings['rssi0']  # 在 1 米處的 RSSI
+        self.path_loss_n = rssi_settings['path_loss_n']  # 路徑損失指數
+        self.noise_stddev = 2.0  # dBm 隨機雜訊
+
+        self.rssi = 0.0
+
+    def listener_callback(self, msg: VehicleLocalPosition):
+        drone_x = msg.x
+        drone_y = msg.y
+        drone_z = msg.z
+
+        # 計算與 beacon 的水平距離
+        dx = drone_x - self.position[0]
+        dy = drone_y - self.position[1]
+        dz = drone_z - self.position[2]
+        distance = math.sqrt(dx**2 + dy**2 + dz**2)
+        distance = max(distance, 0.1)  # 避免 log(0)
+
+        # 使用 log-distance 模型模擬 RSSI
+        rssi = self.rssi0 - 10 * self.path_loss_n * math.log10(distance)
+
+        # 加上隨機 noise
+        noise = random.gauss(0, self.noise_stddev)
+        rssi += noise
+
+        # 發布
+        msg_out = Float32()
+        msg_out.data = float(rssi)
+        self.rssi_publisher.publish(msg_out)
+
+        self.rssi = rssi
+
+class Controller():
+    def __init__(self, drones, beacons):
         self.drones = drones
+        self.beacons = beacons
 
         executor = MultiThreadedExecutor()
         for drone in drones:
             executor.add_node(drone)
 
-        self.executor_thread = threading.Thread(target=self.run_executor, args=(executor,))
+        for beacon in beacons:
+            executor.add_node(beacon)
+
+        self.executor_thread = threading.Thread(target=self._run_executor, args=(executor,))
         self.executor_thread.start()
         
-    def run_executor(self, executor):
+    def _run_executor(self, executor):
         executor.spin()
 
-    def position_setpoint(self, drone_ID = 0,x: float = 0.0, y: float = 0.0, z: float = -5.0):
+    def _run_position_setpoint(self, drone_ID = 0,x: float = 0.0, y: float = 0.0, z: float = -5.0):
         drone = self.drones[drone_ID]
         drone.publish_position_setpoint(x, y, z)
 
-    def run_position_setpoint(self, drone_ID=0, x: float = 0.0, y: float = 0.0, z: float = -5.0):
+    def position_setpoint(self, drone_ID=0, x: float = 0.0, y: float = 0.0, z: float = -5.0):
         self.position_setpoint_thread = threading.Thread(
-            target=self.position_setpoint, args=(drone_ID, x, y, z))
+            target=self._run_position_setpoint, args=(drone_ID, x, y, z))
         self.position_setpoint_thread.start()
 
+    def estimate_position(self):
+        for i in range(1,5):
+            print(self.beacons[i].rssi)
+
+        
 
 def main(args=None) -> None:
     rclpy.init(args=args)
-    ID = [1, 2]
+
+    with open('/home/ada/luoluo/px4_ros2_ws/src/multi_drone_ctl/multi_drone_ctl/config.yaml', 'r') as f:
+        config = yaml.safe_load(f)
+
     drones = []
-    for i in ID:
-        prefix = f'/px4_{i}'
-        target_system = i + 1
-        drone = OffboardControl(prefix, target_system)
+    ble_beacons = []
+    for drone in config['drones']:
+        drone_setting = config['drones'][drone]
+        drone = OffboardControl(prefix=drone_setting['prefix'], \
+                                target_system=drone_setting['target_system'])
         drones.append(drone)
 
-    controller = DroneController(drones)
+        for beacon in config['ble_beacons']:
+            beacon_setting = config['ble_beacons'][beacon]
+            blebeacon = BLEbeacon(position=beacon_setting['position'], \
+                                  prefix=drone_setting['prefix'], \
+                                  target_system=drone_setting['target_system'], \
+                                  name=beacon_setting['name'], \
+                                  rssi_settings=config['rssi_settings'])
+            ble_beacons.append(blebeacon)
+
+    controller = Controller(drones, ble_beacons)
+
+
     cmd_dict = {
         'set': lambda z: controller.position_setpoint(z),
         'disarm': lambda: [drone.disarm() for drone in drones],
         'land': lambda: [drone.land() for drone in drones],
+        'estimate': controller.estimate_position
     }
 
     while rclpy.ok():
@@ -171,14 +250,14 @@ def main(args=None) -> None:
                     x = float(input("Enter x position: ").strip())
                     y = float(input("Enter y position: ").strip())
                     z = float(input("Enter z position: ").strip())
-                    controller.run_position_setpoint(drone_id, x, y, z)
+                    controller.position_setpoint(drone_id, x, y, z)
+                    # pass
                 else:
                     cmd_dict[cmd]()
             else:
                 print("Unknown command. Please enter 'setpoint', 'disarm', or 'land'.")
         except KeyboardInterrupt:
             break
-
 
 if __name__ == '__main__':
     try:
