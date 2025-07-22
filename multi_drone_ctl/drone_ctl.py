@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-import threading
-import time
-import rclpy
 import math
 import random
+import threading
+import time
 import yaml
 
+import numpy as np
+from scipy.optimize import least_squares
+
+import rclpy
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
+
 from std_msgs.msg import Float32
 from px4_msgs.msg import OffboardControlMode, TrajectorySetpoint, VehicleCommand, VehicleLocalPosition, VehicleStatus
 
@@ -203,8 +207,36 @@ class Controller():
         self.position_setpoint_thread.start()
 
     def estimate_position(self):
-        for i in range(1,5):
+        for i in range(4):
             print(self.beacons[i].rssi)
+
+        rssi0 = self.beacons[0].rssi0
+        path_loss_n = self.beacons[0].path_loss_n
+
+        positions = []
+        distances = []
+
+        for beacon in self.beacons[:4]:
+            if beacon.rssi == 0.0:  # 初始值尚未更新
+                continue
+            pos = beacon.position
+            rssi = beacon.rssi
+            distance = 10 ** ((rssi0 - rssi) / (10 * path_loss_n))
+            positions.append(pos)
+            distances.append(distance)
+
+        if len(positions) < 3:
+            print("[WARN] Not enough beacons for trilateration")
+            return None
+
+        def residuals(xy):
+            x, y = xy
+            return [np.linalg.norm([x - px, y - py]) - d for (px, py, _), d in zip(positions, distances)]
+
+        result = least_squares(residuals, x0=[0.0, 0.0])
+        print(f"Estimated position: {result.x}")
+        # return result.x  # [x_est, y_est]
+
 
         
 
