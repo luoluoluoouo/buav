@@ -148,8 +148,8 @@ class BLEbeacon(Node):
         self.position = position
 
         # 模擬參數
-        self.rssi0 = rssi_settings['rssi0'] + random.uniform(-5, 5)  # 基準 RSSI 值，隨機偏移
-        self.path_loss_n = rssi_settings['path_loss_n'] + random.uniform(-0.1, 0.1)  # 路徑損失指數，隨機偏移
+        self.rssi0 = rssi_settings['rssi0'] #+ random.uniform(-5, 5)  # 基準 RSSI 值，隨機偏移
+        self.path_loss_n = rssi_settings['path_loss_n'] #+ random.uniform(-0.1, 0.1)  # 路徑損失指數，隨機偏移
         self.noise_stddev = rssi_settings['noise_stddev']  # dBm 隨機雜訊
 
     def get_rssi(self, drone_position: tuple):
@@ -166,8 +166,8 @@ class BLEbeacon(Node):
         rssi = self.rssi0 - 10 * self.path_loss_n * math.log10(distance)
 
         # 加上隨機 noise
-        # noise = random.gauss(0, self.noise_stddev)
-        # rssi += noise
+        noise = random.gauss(0, self.noise_stddev)
+        rssi += noise
 
         return rssi
 
@@ -186,21 +186,21 @@ class Controller():
         self.drones.append(drone_2)
 
         self.beacons = []
-        self.RSSI_SETTINGS = {'rssi0': -50, 'path_loss_n': 2.0, 'noise_stddev': 2.0}
+        self.RSSI_SETTINGS = {'rssi0': -50, 'path_loss_n': 2.0, 'noise_stddev': 1.0}
         beacon_1 = BLEbeacon(node_name='beacon1', \
                                 position=(0.0, 0.0, 0.0), \
                                 rssi_settings=self.RSSI_SETTINGS)
         self.beacons.append(beacon_1)
         beacon_2 = BLEbeacon(node_name='beacon2', \
-                                position=(5.0, 0.0, 0.0), \
+                                position=(10.0, 0.0, 0.0), \
                                 rssi_settings=self.RSSI_SETTINGS)
         self.beacons.append(beacon_2)
         beacon_3 = BLEbeacon(node_name='beacon3', \
-                                position=(0.0, 5.0, 0.0), \
+                                position=(0.0, 10.0, 0.0), \
                                 rssi_settings=self.RSSI_SETTINGS)
         self.beacons.append(beacon_3)
         beacon_4 = BLEbeacon(node_name='beacon4', \
-                                position=(5.0, 5.0, 0.0), \
+                                position=(10.0, 10.0, 0.0), \
                                 rssi_settings=self.RSSI_SETTINGS)
         self.beacons.append(beacon_4)
 
@@ -235,7 +235,7 @@ class Controller():
         result = least_squares(residuals, initial_guess)
 
         estimated_position = result.x
-        print(f"Estimated Position for Drone {drone_id}: {estimated_position}")
+        print(f"Estimated Position for Drone {drone_id}: x={estimated_position[0]:.2f}, y={estimated_position[1]:.2f}, z={estimated_position[2]:.2f}")
         
 
 
@@ -254,11 +254,12 @@ def main(args=None) -> None:
 
     while rclpy.ok():
         try:
-            drone_id = input("Enter drone ID (0 or 1): ").strip()
-            if drone_id not in ['0', '1']:
-                print("Invalid drone ID. Please enter 0 or 1.")
-                continue
-            drone_id = int(drone_id)
+            # drone_id = input("Enter drone ID (0 or 1): ").strip()
+            # if drone_id not in ['0', '1']:
+            #     print("Invalid drone ID. Please enter 0 or 1.")
+            #     continue
+            # drone_id = int(drone_id)
+            drone_id = 0  
             cmd = input("Enter command (set, disarm, land, est): ").strip().lower()
             if cmd in cmd_dict:
                 if cmd == 'set':
