@@ -2,9 +2,11 @@ drones:
   drone1:
     target_system: 2
     prefix: '/px4_1'
+    gazebo_position: [0.0, 3.0, 0.0]
   drone2:
     target_system: 3
     prefix: '/px4_2'
+    gazebo_position: [0.0, 6.0, 0.0]
 
 ble_beacons: 
   beacon1:

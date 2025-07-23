@@ -26,11 +26,12 @@ qos_profile = QoSProfile(
 class OffboardControl(Node):
     """Node for controlling a vehicle in offboard mode."""
 
-    def __init__(self, prefix: str, target_system: int) -> None:
+    def __init__(self, prefix: str, target_system: int, gazebo_position: tuple = (0.0, 0.0, 0.0)) -> None:
         super().__init__(f'offboard_control_drone_{target_system}')
 
         self.prefix = prefix
         self.target_system = target_system
+        self.gazebo_x, self.gazebo_y, self.gazebo_z = gazebo_position
         self.get_logger().warn(f'{prefix} + {target_system}')
 
         # Create publishers
@@ -120,12 +121,44 @@ class OffboardControl(Node):
         # elif self.vehicle_local_position.z <= self.takeoff_height:
         #     self.land()
 
-        self.x = self.vehicle_local_position.x
-        self.y = self.vehicle_local_position.y
-        self.z = self.vehicle_local_position.z
+        self.x = self.vehicle_local_position.x + self.gazebo_x
+        self.y = self.vehicle_local_position.y + self.gazebo_y
+        self.z = self.vehicle_local_position.z - self.gazebo_z
 
         if self.offboard_setpoint_counter < 11:
             self.offboard_setpoint_counter += 1
+
+    def estimate_position(self):
+        self.beacons = [
+        # for i in range(4):
+        #     print(self.beacons[i].rssi)
+
+        rssi0 = self.beacons[0].rssi0
+        path_loss_n = self.beacons[0].path_loss_n
+
+        positions = []
+        distances = []
+
+        for beacon in self.beacons[4:]:
+            if beacon.rssi == 0.0:  # 初始值尚未更新
+                continue
+            pos = beacon.position
+            rssi = beacon.rssi
+            distance = 10 ** ((rssi0 - rssi) / (10 * path_loss_n))
+            positions.append(pos)
+            distances.append(distance)
+
+        if len(positions) < 3:
+            print("[WARN] Not enough beacons for trilateration")
+            return None
+
+        def residuals(xy):
+            x, y = xy
+            return [np.linalg.norm([x - px, y - py]) - d for (px, py, _), d in zip(positions, distances)]
+
+        result = least_squares(residuals, x0=[0.0, 0.0])
+        print(f"Estimated position: {result.x}")
+        # return result.x  # [x_est, y_est]
 
 class BLEbeacon(Node):
     def __init__(self, position = (0.0, 0.0, 0.0), \
@@ -206,36 +239,7 @@ class Controller():
             target=self._run_position_setpoint, args=(drone_ID, x, y, z))
         self.position_setpoint_thread.start()
 
-    def estimate_position(self):
-        for i in range(4):
-            print(self.beacons[i].rssi)
 
-        rssi0 = self.beacons[0].rssi0
-        path_loss_n = self.beacons[0].path_loss_n
-
-        positions = []
-        distances = []
-
-        for beacon in self.beacons[:4]:
-            if beacon.rssi == 0.0:  # 初始值尚未更新
-                continue
-            pos = beacon.position
-            rssi = beacon.rssi
-            distance = 10 ** ((rssi0 - rssi) / (10 * path_loss_n))
-            positions.append(pos)
-            distances.append(distance)
-
-        if len(positions) < 3:
-            print("[WARN] Not enough beacons for trilateration")
-            return None
-
-        def residuals(xy):
-            x, y = xy
-            return [np.linalg.norm([x - px, y - py]) - d for (px, py, _), d in zip(positions, distances)]
-
-        result = least_squares(residuals, x0=[0.0, 0.0])
-        print(f"Estimated position: {result.x}")
-        # return result.x  # [x_est, y_est]
 
 
         
@@ -251,7 +255,8 @@ def main(args=None) -> None:
     for drone in config['drones']:
         drone_setting = config['drones'][drone]
         drone = OffboardControl(prefix=drone_setting['prefix'], \
-                                target_system=drone_setting['target_system'])
+                                target_system=drone_setting['target_system'], \
+                                gazebo_position=drone_setting['gazebo_position'])
         drones.append(drone)
 
         for beacon in config['ble_beacons']:
@@ -270,12 +275,12 @@ def main(args=None) -> None:
         'set': lambda z: controller.position_setpoint(z),
         'disarm': lambda: [drone.disarm() for drone in drones],
         'land': lambda: [drone.land() for drone in drones],
-        'estimate': controller.estimate_position
+        'est': controller.estimate_position
     }
 
     while rclpy.ok():
         try:
-            cmd = input("Enter command (set, disarm, land): ").strip().lower()
+            cmd = input("Enter command (set, disarm, land, est): ").strip().lower()
             if cmd in cmd_dict:
                 if cmd == 'set':
                     drone_id = int(input("Enter drone ID (0 or 1): ").strip())
