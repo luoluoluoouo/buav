@@ -3,8 +3,7 @@ from .common_publisher import CommonPublisher
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
-from std_msgs.msg import Bool, Float32, UInt32, UInt16, UInt8
-from px4_msgs.msg import VehicleCommand
+from px4_msgs.msg import VehicleCommand # type: ignore
 
 class VehicleCommandConsts:
     VEHICLE_CMD_NAV_LAND = 21
@@ -22,21 +21,21 @@ class VehicleCommandPublisher(CommonPublisher):
 
     def publish_command(
             self,
-            command_id: UInt32=None,
-            param1: Float32=None,
-            param2: Float32=None,
-            param3: Float32=None,
-            param4: Float32=None,
-            param5: Float32=None,
-            param6: Float32=None,
-            param7: Float32=None,
-            target_system: UInt8=None,
-            target_component: UInt8=None,
-            source_system: UInt8=None,
-            source_component: UInt16=None,
-            confirmation: UInt8=None,
-            from_external: Bool=None) -> None:
-        
+            command_id: int | None = None,
+            param1: float | None = None,
+            param2: float | None = None,
+            param3: float | None = None,
+            param4: float | None = None,
+            param5: float | None = None,
+            param6: float | None = None,
+            param7: float | None = None,
+            target_system: int | None = None,
+            target_component: int | None = None,
+            source_system: int | None = None,
+            source_component: int | None = None,
+            confirmation: int | None = None,
+            from_external: bool | None = None) -> None:
+
         command = VehicleCommand()
 
         if command_id is not None:

@@ -3,8 +3,7 @@ from .common_publisher import CommonPublisher
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
-from std_msgs.msg import UInt64, Bool
-from px4_msgs.msg import OffboardControlMode
+from px4_msgs.msg import OffboardControlMode # type: ignore
 
 class OffboardControlModePublisher(CommonPublisher):
     def __init__(self, node: Node, qos_profile: QoSProfile, prefix: str=''):
@@ -14,14 +13,14 @@ class OffboardControlModePublisher(CommonPublisher):
     
     def publish_command(
             self,
-            position: Bool = None,
-            velocity: Bool = None,
-            acceleration: Bool = None,
-            attitude: Bool = None,
-            body_rate: Bool = None,
-            thrust_and_torque: Bool = None,
-            direct_actuator: Bool = None) -> None:
-        
+            position: bool | None = None,
+            velocity: bool | None = None,
+            acceleration: bool | None = None,
+            attitude: bool | None = None,
+            body_rate: bool | None = None,
+            thrust_and_torque: bool | None = None,
+            direct_actuator: bool | None = None) -> None:
+
         command = OffboardControlMode()
 
         command.timestamp = int(self.node.get_clock().now().nanoseconds / 1000)

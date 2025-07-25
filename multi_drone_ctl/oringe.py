@@ -1,6 +1,7 @@
 import rclpy
 
 from rclpy.node import Node
+from rclpy.executors import MultiThreadedExecutor
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
 
 from publisher.offboard_control_mode_publisher import OffboardControlModePublisher
@@ -32,17 +33,16 @@ class Controller(Node):
         self._vehicle_command_publisher = VehicleCommandPublisher(self, qos_profile)
 
         self._failsafe_flags_receiver = FailsafeFlagsReceiver(self, qos_profile)
-
         self._offboard_control_mode_publisher.publish_command()
     
     def arm(self):
         self._vehicle_command_publisher.publish_command(
             command_id=VehicleCommandConsts.VEHICLE_CMD_COMPONENT_ARM_DISARM,
             param1=VehicleCommandConsts.ARMING_ACTION_ARM,
-            target_system=1.0,
-            target_component=1.0,
-            source_system=1.0,
-            source_component=1.0,
+            target_system=1,
+            target_component=1,
+            source_system=1,
+            source_component=1,
             from_external=True
         )
     
@@ -65,35 +65,41 @@ def failsafe_flags_callback(data: FailsafeFlagsMsg):
 def main(args=None) -> None:
     rclpy.init(args=args)
 
+    executor = MultiThreadedExecutor()
+
     controller = Controller(name = 'test_drone', \
                             prefix= '', \
                             target_system=0, \
                             gazebo_position=(0.0, 0.0, 0.0))
-    
+
     controller.get_failsafe_flags_receiver().add_callback(failsafe_flags_callback)
 
-    while rclpy.ok():
-        try:
-            controller.get_offboard_control_mode_publisher().publish_command(position=True)
+    executor.add_node(controller)
+    executor.spin()
 
-            controller.get_vehicle_command_publisher().publish_command(
-                command_id=VehicleCommandConsts.VEHICLE_CMD_COMPONENT_ARM_DISARM,
-                param1=VehicleCommandConsts.ARMING_ACTION_ARM
-            )
+    # while rclpy.ok():
+    #     try:
+            
+    #     #     controller.get_offboard_control_mode_publisher().publish_command(position=True)
 
-            controller.get_trajectory_setpoint_publisher().publish_command(
-                position=[0.0, 0.0, -5.0],
-                yaw=1.57079
-            )
-        except KeyboardInterrupt:
-            break
+    #     #     controller.get_vehicle_command_publisher().publish_command(
+    #     #         command_id=VehicleCommandConsts.VEHICLE_CMD_COMPONENT_ARM_DISARM,
+    #     #         param1=VehicleCommandConsts.ARMING_ACTION_ARM
+    #     #     )
+
+    #     #     controller.get_trajectory_setpoint_publisher().publish_command(
+    #     #         position=[0.0, 0.0, -5.0],
+    #     #         yaw=1.57079
+    #     #     )
+    #     except KeyboardInterrupt:
+    #         break
     
     while not rclpy.ok():
         pass
 
-    print('trying to arming...')
-    controller.arm()
-    print('arming done.')
+    # print('trying to arming...')
+    # controller.arm()
+    # print('arming done.')
 
     while rclpy.ok():
         pass

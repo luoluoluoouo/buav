@@ -3,8 +3,9 @@ from .common_publisher import CommonPublisher
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
-from std_msgs.msg import Float32
-from px4_msgs.msg import TrajectorySetpoint
+from px4_msgs.msg import TrajectorySetpoint # type: ignore
+
+from typing import Tuple
 
 class TrajectorySetpointPublisher(CommonPublisher):
     def __init__(self, node: Node, qos_profile: QoSProfile, prefix: str=''):
@@ -14,12 +15,12 @@ class TrajectorySetpointPublisher(CommonPublisher):
 
     def publish_command(
             self,
-            position: list[Float32, Float32, Float32] = None,
-            velocity: list[Float32, Float32, Float32] = None,
-            acceleration: list[Float32, Float32, Float32] = None,
-            jerk: list[Float32, Float32, Float32] = None,
-            yaw: Float32=None,
-            yawspeed: Float32=None) -> None:
+            position: Tuple[float, float, float] | None = None,
+            velocity: Tuple[float, float, float] | None = None,
+            acceleration: Tuple[float, float, float] | None = None,
+            jerk: Tuple[float, float, float] | None = None,
+            yaw: float | None = None,
+            yawspeed: float | None = None) -> None:
         
         command = TrajectorySetpoint()
         
