@@ -29,21 +29,48 @@ class TopicSubscriber(Node):
         super().__init__('topic_subscriber')
         self.topic_name = topic_name
         self.subscriber = self.create_subscription(
-            FailsafeFlags,
+            VehicleLocalPosition,
             topic_name,
             self.listener_callback,
             qos_profile
         )
+
+        self.timer = self.create_timer(1/50, self.timer_callback) 
         self.data = None
+        self.position = [0.0, 0.0, 0.0] 
 
     def listener_callback(self, msg):
-        self.data = msg
-        if self.data is None:
-            self.get_logger().warn(f'No data received from {self.topic_name}')
-        else:
-            # self.get_logger().info(f'Received data from {self.topic_name}: {msg}')
-            offboard_control_signal_lost = self.data.offboard_control_signal_lost
-            self.get_logger().info(f"Offboard Control Signal Lost: {offboard_control_signal_lost}")
+        self.data = msg  # 可用于其他用途
+
+        # 拆解消息字段
+        # self.get_logger().info("Received VehicleLocalPosition message:")
+        # self.get_logger().info(f"  timestamp: {msg.timestamp}")
+        # self.get_logger().info(f"  timestamp_sample: {msg.timestamp_sample}")
+        # self.get_logger().info(f"  position (x, y, z): ({msg.x}, {msg.y}, {msg.z})")
+        self.position = [msg.x, msg.y, msg.z]  # 更新位置
+        # self.get_logger().info(f"  velocity (vx, vy, vz): ({msg.vx}, {msg.vy}, {msg.vz})")
+        # self.get_logger().info(f"  acceleration (ax, ay, az): ({msg.ax}, {msg.ay}, {msg.az})")
+        # self.get_logger().info(f"  heading: {msg.heading} (var: {msg.heading_var})")
+        # self.get_logger().info(f"  global flags - xy_global: {msg.xy_global}, z_global: {msg.z_global}")
+        # self.get_logger().info(f"  eph: {msg.eph}, epv: {msg.epv}, evh: {msg.evh}, evv: {msg.evv}")
+        # self.get_logger().info(f"  dist_bottom: {msg.dist_bottom} (valid: {msg.dist_bottom_valid})")
+        # self.get_logger().info(f"  dead_reckoning: {msg.dead_reckoning}")
+        # self.get_logger().info(f"  vxy_max: {msg.vxy_max}, vz_max: {msg.vz_max}")
+        # self.get_logger().info(f"  hagl_min: {msg.hagl_min}, hagl_max: {msg.hagl_max}")
+
+        # 如果你想展开数组字段
+        # delta_xy = msg.delta_xy.tolist()
+        # delta_vxy = msg.delta_vxy.tolist()
+
+        # self.get_logger().info(f"  delta_xy: {delta_xy}, reset_counter: {msg.xy_reset_counter}")
+        # self.get_logger().info(f"  delta_vxy: {delta_vxy}, reset_counter: {msg.vxy_reset_counter}")
+        # self.get_logger().info(f"  delta_z: {msg.delta_z}, reset_counter: {msg.z_reset_counter}")
+        # self.get_logger().info(f"  delta_vz: {msg.delta_vz}, reset_counter: {msg.vz_reset_counter}")
+        # self.get_logger().info(f"  delta_heading: {msg.delta_heading}, reset_counter: {msg.heading_reset_counter}")
+
+    def timer_callback(self):
+        self.get_logger().info(f"Current position: {self.position}")
+
 
 def get_topic_data(topic_name):
     rclpy.init()
@@ -54,17 +81,21 @@ def get_topic_data(topic_name):
     return node.data
 
 if __name__ == '__main__':
-    try:
-        topic_name = '/fmu/out/failsafe_flags'
-        data = get_topic_data(topic_name)
-        if data:
-            print(f"Data received from {topic_name}: {data}")
+    rclpy.init()
+    print("Starting topic subscriber...")
+
+    topic_name = '/fmu/out/vehicle_local_position'
+    node = TopicSubscriber(topic_name)
+    executor = MultiThreadedExecutor()
+    executor.add_node(node)
+    executor.spin()
+    while rclpy.ok():
+        if node.data is not None:
+            print(f"Received data: {node.data}")
         else:
-            print(f"No data received from {topic_name}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        rclpy.shutdown()
+            print("No data received yet.")
+
+    rclpy.shutdown()
 
 # /fmu/out/failsafe_flags
 # FailsafeFlags
