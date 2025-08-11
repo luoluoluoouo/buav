@@ -32,6 +32,10 @@ class Controller(Node):
         self._trajectory_setpoint_publisher = TrajectorySetpointPublisher(self, qos_profile)
         self._vehicle_command_publisher = VehicleCommandPublisher(self, qos_profile)
 
+        self._vehicle_command_publisher.publish_command(
+            command_id=VehicleCommandConsts.VEHICLE_CMD_COMPONENT_ARM_DISARM
+        )
+
         self._failsafe_flags_receiver = FailsafeFlagsReceiver(self, qos_profile)
         self._offboard_control_mode_publisher.publish_command()
     
@@ -77,29 +81,28 @@ def main(args=None) -> None:
     executor.add_node(controller)
     executor.spin()
 
-    # while rclpy.ok():
-    #     try:
-            
-    #     #     controller.get_offboard_control_mode_publisher().publish_command(position=True)
+    while rclpy.ok():
+        try:
+            controller.get_offboard_control_mode_publisher().publish_command(position=True)
 
-    #     #     controller.get_vehicle_command_publisher().publish_command(
-    #     #         command_id=VehicleCommandConsts.VEHICLE_CMD_COMPONENT_ARM_DISARM,
-    #     #         param1=VehicleCommandConsts.ARMING_ACTION_ARM
-    #     #     )
+            controller.get_vehicle_command_publisher().publish_command(
+                command_id=VehicleCommandConsts.VEHICLE_CMD_COMPONENT_ARM_DISARM,
+                param1=VehicleCommandConsts.ARMING_ACTION_ARM
+            )
 
-    #     #     controller.get_trajectory_setpoint_publisher().publish_command(
-    #     #         position=[0.0, 0.0, -5.0],
-    #     #         yaw=1.57079
-    #     #     )
-    #     except KeyboardInterrupt:
-    #         break
+            controller.get_trajectory_setpoint_publisher().publish_command(
+                position=(0.0, 0.0, -5.0),
+                yaw=1.57079
+            )
+        except KeyboardInterrupt:
+            break
     
     while not rclpy.ok():
         pass
 
-    # print('trying to arming...')
-    # controller.arm()
-    # print('arming done.')
+    print('trying to arming...')
+    controller.arm()
+    print('arming done.')
 
     while rclpy.ok():
         pass
