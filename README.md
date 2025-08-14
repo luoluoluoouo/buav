@@ -94,7 +94,7 @@ ros2 run multi_drone_ctl drone_ctl
 - 無 ROS 主題：請先啟動 `run.sh`，等待 PX4 連上 XRCE Agent 後再執行節點。
 
 ## 測試與開發
-
+sudo lsof -i :8888
 - 建置完成後可執行基本測試工具（flake8、pep257）透過 `colcon test`。
 - 本套件入口點：`drone_ctl`（對應 `multi_drone_ctl/drone_ctl.py:main`）。
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 kill -9 $(lsof -t -i :11345)
+kill -9 $(lsof -i :8888)
 
 MicroXRCEAgent udp4 -p 8888 &
 

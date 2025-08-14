@@ -47,6 +47,7 @@ cd /home/ada/luoluo/px4_ros2_ws
 colcon build --symlink-install --packages-select multi_drone_ctl
 source install/setup.bash
 python3 src/multi_drone_ctl/multi_drone_ctl/drone_ctl.py 
+
 ```
 
 ### 3. 操作命令
