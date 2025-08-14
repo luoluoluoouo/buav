@@ -1,5 +1,7 @@
 #!/bin/bash
 
+kill -9 $(lsof -t -i :11345)
+
 MicroXRCEAgent udp4 -p 8888 &
 
 export PX4_AUTOPILOT_PATH=/home/ada/luoluo/PX4-Autopilot
