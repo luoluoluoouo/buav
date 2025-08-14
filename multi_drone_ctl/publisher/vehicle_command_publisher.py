@@ -37,6 +37,7 @@ class VehicleCommandPublisher(CommonPublisher):
             from_external: bool | None = None) -> None:
 
         command = VehicleCommand()
+        command.timestamp = int(self.node.get_clock().now().nanoseconds / 1000)
 
         if command_id is not None:
             command.command = command_id

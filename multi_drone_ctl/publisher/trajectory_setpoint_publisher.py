@@ -23,6 +23,7 @@ class TrajectorySetpointPublisher(CommonPublisher):
             yawspeed: float | None = None) -> None:
         
         command = TrajectorySetpoint()
+        command.timestamp = int(self.node.get_clock().now().nanoseconds / 1000)
         
         if position is not None:
             command.position = position
