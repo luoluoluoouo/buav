@@ -16,9 +16,9 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPo
 from std_msgs.msg import Float32
 from px4_msgs.msg import VehicleLocalPosition, VehicleStatus
 
-from publisher.offboard_control_mode_publisher import OffboardControlModePublisher
-from publisher.trajectory_setpoint_publisher import TrajectorySetpointPublisher
-from publisher.vehicle_command_publisher import VehicleCommandPublisher, VehicleCommandConsts
+from .publisher.offboard_control_mode_publisher import OffboardControlModePublisher
+from .publisher.trajectory_setpoint_publisher import TrajectorySetpointPublisher
+from .publisher.vehicle_command_publisher import VehicleCommandPublisher, VehicleCommandConsts
 
 qos_profile = QoSProfile(
     reliability=ReliabilityPolicy.BEST_EFFORT,
