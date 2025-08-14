@@ -50,6 +50,21 @@
       </link>
     </model>
 
+    <!-- 中央掃描目標 - 紅色立方體作為視覺標記 -->
+    <model name="scan_target">
+      <static>true</static>
+      <pose>5 5 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>1.0 1.0 1.0</size></box></geometry>
+          <material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse></material>
+        </visual>
+        <collision name="collision">
+          <geometry><box><size>1.0 1.0 1.0</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
     <!-- 可選：加入 world plugin 控制 beacon 插入行為 -->
     <!-- 若需依據 ROS TF 或 range heuristic 模擬 beacon 廣播，可寫一個 world-plugin -->
   </world>
