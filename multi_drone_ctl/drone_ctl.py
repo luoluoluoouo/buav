@@ -266,9 +266,6 @@ def main(args=None) -> None:
     }
 
     while rclpy.ok():
-        # controller.drones[0].arm()
-        # time.sleep(3)
-        # controller.drones[0].publish_position_setpoint(0.0, 0.0, -5.0)
         try:
             drone_id = input("Enter drone ID (0 or 1): ").strip()
             if drone_id not in ['0', '1']:
