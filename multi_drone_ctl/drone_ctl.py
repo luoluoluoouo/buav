@@ -391,64 +391,31 @@ def main(args=None) -> None:
         'set': lambda z: controller.position_setpoint(z),
         'disarm': lambda: [drone.disarm() for drone in controller.drones],
         'land': lambda: [drone.land() for drone in controller.drones],
-        'est': lambda: [controller.estimate_position(drone_id) for drone_id in range(len(controller.drones))],
-        'coop': lambda: controller.estimate_positions_coop()
+        'est': lambda: [controller.estimate_position(drone_id) for drone_id in range(len(controller.drones))]
     }
 
-    try:
-        print("=== Multi-Drone BLE Localization Controller ===")
-        print("Available commands:")
-        print("  arm  - Arm all drones")
-        print("  set  - Set position for a specific drone")
-        print("  est  - Estimate position using BLE beacons")
-        print("  coop - Cooperative localization (Drone1 as moving beacon)")
-        print("  land - Land all drones")
-        print("  disarm - Disarm all drones")
-        print("  quit - Exit program")
-        print()
-
-        while rclpy.ok():
-            try:
-                cmd = input("Enter command: ").strip().lower()
-                if cmd in ['quit', 'exit', 'q']:
-                    break
-                elif cmd in cmd_dict:
-                    if cmd == 'set':
-                        drone_id = input("Enter drone ID (0 or 1): ").strip()
-                        if drone_id not in ['0', '1']:
-                            print("Invalid drone ID. Please enter 0 or 1.")
-                            continue
-                        drone_id = int(drone_id)
-                        x = float(input("Enter x position: ").strip())
-                        y = float(input("Enter y position: ").strip())
-                        z = float(input("Enter z position: ").strip())
-                        controller.position_setpoint(drone_id, (x, y, z))
-                    elif cmd == 'est':
-                        drone_id = input("Enter drone ID (0 or 1, or 'all' for both): ").strip()
-                        if drone_id == 'all':
-                            for i in range(len(controller.drones)):
-                                controller.estimate_position(i)
-                        elif drone_id in ['0', '1']:
-                            controller.estimate_position(int(drone_id))
-                        else:
-                            print("Invalid drone ID. Please enter 0, 1, or 'all'.")
-                    elif cmd == 'coop':
-                        controller.estimate_positions_coop()
-                    else:
-                        cmd_dict[cmd]()
+    while rclpy.ok():
+        try:
+            drone_id = input("Enter drone ID (0 or 1): ").strip()
+            if drone_id not in ['0', '1']:
+                print("Invalid drone ID. Please enter 0 or 1.")
+                continue
+            drone_id = int(drone_id)
+            cmd = input("Enter command (arm, set, disarm, land, est): ").strip().lower()
+            if cmd in cmd_dict:
+                if cmd == 'set':
+                    x = float(input("Enter x position: ").strip())
+                    y = float(input("Enter y position: ").strip())
+                    z = float(input("Enter z position: ").strip())
+                    controller.position_setpoint(drone_id, (x, y, z))
+                elif cmd == 'est':
+                    controller.estimate_position(drone_id)
                 else:
-                    print("Unknown command. Available commands: arm, set, disarm, land, est, coop, quit")
-            except KeyboardInterrupt:
-                break
-            except ValueError as e:
-                print(f"Input error: {e}")
-            except Exception as e:
-                print(f"Error executing command: {e}")
-    
-    finally:
-        print("Shutting down...")
-        controller.shutdown()
-        rclpy.shutdown()
+                    cmd_dict[cmd]()
+            else:
+                print("Unknown command. Please enter 'setpoint', 'disarm', or 'land'.")
+        except KeyboardInterrupt:
+            break
 
 if __name__ == '__main__':
     try:
