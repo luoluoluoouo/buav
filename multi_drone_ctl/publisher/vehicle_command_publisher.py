@@ -5,7 +5,7 @@ from rclpy.qos import QoSProfile
 
 from px4_msgs.msg import VehicleCommand # type: ignore
 
-class VehicleCommandConsts:
+class VehicleCommandEnum:
     VEHICLE_CMD_NAV_LAND = 21
     VEHICLE_CMD_DO_SET_MODE = 176
     VEHICLE_CMD_COMPONENT_ARM_DISARM = 400
@@ -19,7 +19,7 @@ class VehicleCommandPublisher(CommonPublisher):
         self.publisher = node.create_publisher(
             VehicleCommand, f'{prefix}/fmu/in/vehicle_command', qos_profile)
 
-    def publish_command(
+    def publish(
             self,
             command_id: int | None = None,
             param1: float | None = None,

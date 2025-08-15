@@ -68,7 +68,7 @@ class FailsafeFlagsReceiver(CommonReceiver):
         self.subscriber = node.create_subscription(
             FailsafeFlags,
             f'{prefix}/fmu/out/failsafe_flags',
-            self.listener_callback,
+            self._listener_callback,
             qos_profile
         )
         self.callbacks = []
@@ -79,8 +79,6 @@ class FailsafeFlagsReceiver(CommonReceiver):
         else:
             raise TypeError("Callback must be a callable function")
     
-    def listener_callback(self, msg) -> None:
-        self.data = msg
-        
+    def _listener_callback(self, msg) -> None:
         for callback in self.callbacks:
-            callback(data=self.data)
+            callback(msg)

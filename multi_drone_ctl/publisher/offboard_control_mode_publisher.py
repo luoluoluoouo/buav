@@ -11,7 +11,7 @@ class OffboardControlModePublisher(CommonPublisher):
         self.publisher = node.create_publisher(
             OffboardControlMode, f'{prefix}/fmu/in/offboard_control_mode', qos_profile)
     
-    def publish_command(
+    def publish(
             self,
             position: bool | None = None,
             velocity: bool | None = None,
