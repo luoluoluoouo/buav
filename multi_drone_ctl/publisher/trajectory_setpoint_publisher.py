@@ -13,7 +13,7 @@ class TrajectorySetpointPublisher(CommonPublisher):
         self.publisher = node.create_publisher(
             TrajectorySetpoint, f'{prefix}/fmu/in/trajectory_setpoint', qos_profile)
 
-    def publish_command(
+    def publish(
             self,
             position: Tuple[float, float, float] | None = None,
             velocity: Tuple[float, float, float] | None = None,
