@@ -15,7 +15,7 @@ setup(
     license='Apache License 2.0',
     entry_points={
         'console_scripts': [
-            'oringe = multi_drone_ctl.main:main'
+            'main = multi_drone_ctl.main:main'
         ],
     },
 )
