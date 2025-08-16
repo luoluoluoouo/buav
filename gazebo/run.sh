@@ -14,3 +14,6 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 export PX4_AUTOPILOT_PATH=/home/ubuntu/PX4-Autopilot
 
 $PX4_AUTOPILOT_PATH/Tools/simulation/gazebo-classic/sitl_multiple_run.sh -m iris -n 2 -w ../../../../../../../../../../../../../../../../../../../../../../../$SCRIPT_DIR/ble
+
+kill -9 $(lsof -t -i :11345)
+kill -9 $(lsof -t -i :8888)
