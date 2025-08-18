@@ -87,100 +87,6 @@ class MultiDroneController():
         except Exception:
             pass
 
-    # TODO: CLEAN CODE, THIS IS DIRTY CODE
-    # def estimate_position(self, drone_id = 0):
-    #     """使用靜態 BLE 信標估測 drone 的位置"""
-    #     drone = self.drones[drone_id]
-
-    #     position = drone.get_position()
-    #     print(f"Current Position for Drone {drone_id}: x={position[0]:.2f}, y={position[1]:.2f}, z={position[2]:.2f}")
-
-    #     rssi_values = [beacon.get_rssi(position) for beacon in self.beacons]
-
-    #     def residuals(x):
-    #         return [rssi - (self.RSSI_SETTINGS['rssi0'] - 10 * self.RSSI_SETTINGS['path_loss_n'] * math.log10(
-    #             math.sqrt((x[0] - beacon.position[0])**2 + (x[1] - beacon.position[1])**2 + (x[2] - beacon.position[2])**2))
-    #         ) for rssi, beacon in zip(rssi_values, self.beacons)]
-
-    #     initial_guess = [position[0], position[1], position[2]]
-    #     result = least_squares(residuals, initial_guess)
-
-    #     estimated_position = result.x
-    #     print(f"Estimated Position for Drone {drone_id}: x={estimated_position[0]:.2f}, y={estimated_position[1]:.2f}, z={estimated_position[2]:.2f}")
-        
-    #     # 計算估計誤差
-    #     error_x = abs(estimated_position[0] - position[0])
-    #     error_y = abs(estimated_position[1] - position[1]) 
-    #     error_z = abs(estimated_position[2] - position[2])
-    #     error_total = math.sqrt(error_x**2 + error_y**2 + error_z**2)
-    #     print(f"Position Error for Drone {drone_id}: x={error_x:.2f}m, y={error_y:.2f}m, z={error_z:.2f}m, total={error_total:.2f}m")
-        
-    #     return estimated_position
-
-    # def estimate_positions_coop(self):
-    #     """協同定位：先估測 drone1，再以 drone1 作為移動信標估測 drone2"""
-    #     print("=== 開始協同定位 ===")
-        
-    #     # 步驟1：使用靜態信標估測 drone1 位置
-    #     print("\n步驟1：估測 Drone1 位置（使用靜態 BLE 信標）")
-    #     drone1_estimated = self.estimate_position(0)
-        
-    #     # 步驟2：更新 drone1_beacon 的位置（讓 drone1 成為移動信標）
-    #     self.drone1_beacon.position = tuple(drone1_estimated)
-    #     print(f"更新 Drone1 作為移動信標位置: {drone1_estimated}")
-        
-    #     # 步驟3：使用靜態信標 + drone1 信標來估測 drone2 位置
-    #     print("\n步驟2：估測 Drone2 位置（使用靜態信標 + Drone1 移動信標）")
-    #     drone2 = self.drones[1]
-    #     drone2_actual_position = drone2.get_position()
-    #     print(f"Drone2 實際位置: x={drone2_actual_position[0]:.2f}, y={drone2_actual_position[1]:.2f}, z={drone2_actual_position[2]:.2f}")
-        
-    #     # 獲取所有信標（靜態 + drone1）的 RSSI 值
-    #     all_beacons = self.beacons + [self.drone1_beacon]
-    #     rssi_values = [beacon.get_rssi(drone2_actual_position) for beacon in all_beacons]
-        
-    #     def residuals_coop(x):
-    #         return [rssi - (self.RSSI_SETTINGS['rssi0'] - 10 * self.RSSI_SETTINGS['path_loss_n'] * math.log10(
-    #             max(0.1, math.sqrt((x[0] - beacon.position[0])**2 + (x[1] - beacon.position[1])**2 + (x[2] - beacon.position[2])**2)))
-    #         ) for rssi, beacon in zip(rssi_values, all_beacons)]
-        
-    #     initial_guess = [drone2_actual_position[0], drone2_actual_position[1], drone2_actual_position[2]]
-    #     result = least_squares(residuals_coop, initial_guess)
-        
-    #     drone2_estimated = result.x
-    #     print(f"Drone2 估測位置（協同定位）: x={drone2_estimated[0]:.2f}, y={drone2_estimated[1]:.2f}, z={drone2_estimated[2]:.2f}")
-        
-    #     # 計算協同定位的精度改善
-    #     # 先計算只用靜態信標時的估測誤差
-    #     rssi_values_static = [beacon.get_rssi(drone2_actual_position) for beacon in self.beacons]
-        
-    #     def residuals_static(x):
-    #         return [rssi - (self.RSSI_SETTINGS['rssi0'] - 10 * self.RSSI_SETTINGS['path_loss_n'] * math.log10(
-    #             max(0.1, math.sqrt((x[0] - beacon.position[0])**2 + (x[1] - beacon.position[1])**2 + (x[2] - beacon.position[2])**2)))
-    #         ) for rssi, beacon in zip(rssi_values_static, self.beacons)]
-        
-    #     result_static = least_squares(residuals_static, initial_guess)
-    #     drone2_static_estimated = result_static.x
-    #     print(f"Drone2 估測位置（僅靜態信標）: x={drone2_static_estimated[0]:.2f}, y={drone2_static_estimated[1]:.2f}, z={drone2_static_estimated[2]:.2f}")
-        
-    #     # 計算兩種方法的誤差
-    #     error_static = math.sqrt(sum([(drone2_static_estimated[i] - drone2_actual_position[i])**2 for i in range(3)]))
-    #     error_coop = math.sqrt(sum([(drone2_estimated[i] - drone2_actual_position[i])**2 for i in range(3)]))
-        
-    #     print(f"\n=== 定位精度比較 ===")
-    #     print(f"僅靜態信標誤差: {error_static:.2f}m")
-    #     print(f"協同定位誤差: {error_coop:.2f}m")
-    #     print(f"精度改善: {((error_static - error_coop)/error_static*100):.1f}%")
-        
-    #     return {
-    #         'drone1_estimated': drone1_estimated,
-    #         'drone2_actual': drone2_actual_position,
-    #         'drone2_static_estimated': drone2_static_estimated,
-    #         'drone2_coop_estimated': drone2_estimated,
-    #         'error_static': error_static,
-    #         'error_coop': error_coop
-    #     }
-    
     def _run_executor(self, executor: MultiThreadedExecutor):
         try:
             executor.spin()
@@ -210,21 +116,6 @@ def cmd_set(controller: MultiDroneController) -> None:
     
     controller.position_setpoint(drone_id, (x, y, z))
 
-# def cmd_est(controller: MultiDroneController) -> None:
-#     """Estimate position using BLE beacons"""
-#     drone_id = input("Enter drone ID (0 or 1, or 'all' for both): ").strip()
-    
-#     if drone_id == 'all':
-#         for i in range(len(controller.drones)):
-#             controller.estimate_position(i)
-#     elif drone_id.isdigit() and drone_id in [0, 1]:
-#         controller.estimate_position(drone_id)
-#     else:
-#         print("Invalid drone ID. Please enter 0, 1, or 'all'.")
-
-# def cmd_coop(controller: MultiDroneController) -> None:
-#     """Cooperative localization (Drone1 as moving beacon)"""
-#     controller.estimate_positions_coop()
 
 def main(args=None) -> None:
     rclpy.init(args=args)
@@ -236,18 +127,12 @@ def main(args=None) -> None:
         'set': cmd_set,
         'disarm': cmd_disarm,
         'land': cmd_land,
-        
-        # TODO: DIRTY!!
-        # 'est': lambda: [controller.estimate_position(drone_id) for drone_id in range(len(controller.drones))],
-        # 'coop': lambda: controller.estimate_positions_coop()
     }
     
     print("=== Multi-Drone BLE Localization Controller ===")
     print("Available commands:")
     print("  arm  - Arm all drones")
     print("  set  - Set position for a specific drone")
-    print("  est  - Estimate position using BLE beacons")
-    print("  coop - Cooperative localization (Drone1 as moving beacon)")
     print("  land - Land all drones")
     print("  disarm - Disarm all drones")
     print("  quit - Exit program")
