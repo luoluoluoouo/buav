@@ -56,7 +56,7 @@ bash run.sh
 ```bash
 cd ~/px4_ros2_ws
 source install/setup.bash
-ros2 run multi_drone_ctl drone_ctl
+ros2 run multi_drone_ctl main
 ```
 
 啟動後進入互動模式：

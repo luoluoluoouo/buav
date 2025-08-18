@@ -21,22 +21,15 @@ qos_profile = QoSProfile(
 
 class MultiDroneController():
     def __init__(self):    
-        drone_1 = OffboardControl(
+        drone = OffboardControl(
             qos_profile = qos_profile,
-            name = 'drone_1',
-            prefix = '/px4_1',
-            target_system = 2,
+            name = 'drone',
+            prefix = '',
+            target_system = 1,
             gazebo_position = (0.0, 3.0, 0.0))
-        
-        drone_2 = OffboardControl(
-            qos_profile=qos_profile,
-            name = 'drone_2',
-            prefix= '/px4_2',
-            target_system = 3,
-            gazebo_position=(0.0, 6.0, 0.0))
 
-        self.drones = [ drone_1, drone_2 ]
-        
+        self.drones = [ drone ]
+
         self.RSSI_SETTINGS = {'rssi0': -50.0, 'path_loss_n': 2.0, 'noise_stddev': 1.0}
         
         beacon_1 = BLEbeacon(
@@ -78,7 +71,7 @@ class MultiDroneController():
 
     def position_setpoint(self, drone_id = 0, position: tuple = (0.0, 0.0, -5.0)):
         drone = self.drones[drone_id]
-        drone.set_position(position)
+        drone.set_position_NEU(position)
 
     def update_drone1_beacon_position(self) -> None:
         """動態更新 drone1 作為移動信標的位置"""
@@ -109,11 +102,11 @@ def cmd_land(controller: MultiDroneController) -> None:
         drone.land()
 
 def cmd_set(controller: MultiDroneController) -> None:
-    drone_id = int(input("Enter drone ID (0 or 1): ").strip())
+    drone_id = 0
     x = float(input("Enter x position: ").strip())
     y = float(input("Enter y position: ").strip())
     z = float(input("Enter z position: ").strip())
-    
+
     controller.position_setpoint(drone_id, (x, y, z))
 
 

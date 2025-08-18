@@ -108,6 +108,23 @@ class OffboardControl(Node):
             yaw=0.0,
         )
 
+    def set_position_NEU(self, target_position: tuple[float, float, float]):
+        '''
+        (x, y, z)
+        x: Forward/backward position
+        y: Right/left position
+        z: Up/down position
+        '''
+        target_x, target_y, target_z = target_position
+        x = target_x
+        y = target_y
+        z = - target_z
+
+        self._trajectory_setpoint_publisher.publish(
+            position=(x, y, z),
+            yaw=0.0,
+        )
+
     def get_position(self):
         self.abs_x = self.gazebo_x + self.vehicle_local_position.y
         self.abs_y = self.gazebo_y + self.vehicle_local_position.x

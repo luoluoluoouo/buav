@@ -28,7 +28,7 @@ kill -9 $(lsof -t -i :11345)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Setting AutoPilot path
-export PX4_AUTOPILOT_PATH=/home/ubuntu/PX4-Autopilot
+export PX4_AUTOPILOT_PATH=/home/ada/luoluo/PX4-Autopilot
 
 $PX4_AUTOPILOT_PATH/Tools/simulation/gazebo-classic/sitl_multiple_run.sh -m iris -n 2 -w $(get_root_back "$PX4_AUTOPILOT_PATH/Tools/simulation/gazebo-classic/sitl_gazebo-classic/worlds")$SCRIPT_DIR/ble -s iris:2 -t px4_sitl_default
 
