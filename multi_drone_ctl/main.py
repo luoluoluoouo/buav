@@ -89,12 +89,14 @@ class MultiDroneController():
 def cmd_arm(controller: MultiDroneController) -> None:
     """Arm all drones"""
     for drone in controller.drones:
-        drone.arm()
+        if not drone.is_armed():
+            drone.arm()
 
 def cmd_disarm(controller: MultiDroneController) -> None:
     """Disarm all drones"""
     for drone in controller.drones:
-        drone.disarm()
+        if drone.is_armed():
+            drone.disarm()
 
 def cmd_land(controller: MultiDroneController) -> None:
     """Land all drones"""
@@ -151,16 +153,34 @@ def main(args=None) -> None:
             break
     
     print("Shutting down...")
-    
-    for drone in controller.drones:
-        drone.land()
-        drone.disarm()
-    
-    controller.executor.shutdown()
-    rclpy.shutdown()
+    shutdown_everything(controller)
 
 if __name__ == '__main__':
     try:
         main()
     except Exception as e:
         print(e)
+
+def shutdown_everything(controller: MultiDroneController) -> None:
+    try:
+        controller.executor.shutdown()
+    except:
+        pass
+    for drone in controller.drones:
+        try:
+            drone.destroy_node()
+        except:
+            pass
+    for beacon in controller.beacons:
+        try:
+            beacon.destroy_node()
+        except:
+            pass
+    try:
+        controller.drone1_beacon.destroy_node()
+    except:
+        pass
+    try:
+        rclpy.shutdown()
+    except:
+        pass

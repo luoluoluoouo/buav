@@ -1,6 +1,6 @@
 from .common_receiver import CommonReceiver
 
-from typing import Protocol
+from typing import Protocol, Callable, List, Any
 
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -71,14 +71,14 @@ class FailsafeFlagsReceiver(CommonReceiver):
             self._listener_callback,
             qos_profile
         )
-        self.callbacks = []
+        self.callbacks: List[Callable[[FailsafeFlagsMsg], Any]] = []
     
-    def add_callback(self, callback):
+    def add_callback(self, callback: Callable[[FailsafeFlagsMsg], Any]) -> None:
         if callable(callback):
             self.callbacks.append(callback)
         else:
             raise TypeError("Callback must be a callable function")
     
-    def _listener_callback(self, msg) -> None:
+    def _listener_callback(self, msg: FailsafeFlagsMsg) -> None:
         for callback in self.callbacks:
             callback(msg)

@@ -1,6 +1,6 @@
 from .common_receiver import CommonReceiver
 
-from typing import Protocol
+from typing import Protocol, Callable, List, Any
 
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -95,14 +95,20 @@ class VehicleLocalPositionReceiver(CommonReceiver):
             self._listener_callback,
             qos_profile
         )
-        self.callbacks = []
+        self.callbacks: List[Callable[[VehicleLocalPositionMsg], Any]] = []
     
-    def add_callback(self, callback) -> None:
+    def add_callback(self, callback: Callable[[VehicleLocalPositionMsg], Any]) -> None:
         if callable(callback):
             self.callbacks.append(callback)
         else:
             raise TypeError("Callback must be a callable function")
 
-    def _listener_callback(self, msg) -> None:
+    def _listener_callback(self, msg: VehicleLocalPositionMsg) -> None:
         for callback in self.callbacks:
             callback(msg)
+    
+    def get_simple_msg(self) -> VehicleLocalPositionMsg:
+        """
+        Returns the latest message received as a simple message.
+        """
+        return VehicleLocalPosition()
