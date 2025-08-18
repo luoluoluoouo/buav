@@ -71,7 +71,7 @@ class MultiDroneController():
 
     def position_setpoint(self, drone_id = 0, position: tuple = (0.0, 0.0, -5.0)):
         drone = self.drones[drone_id]
-        drone.set_position_NEU(position)
+        drone.set_position_NWU(position)
 
     def update_drone1_beacon_position(self) -> None:
         """動態更新 drone1 作為移動信標的位置"""

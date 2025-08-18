@@ -89,7 +89,7 @@ class OffboardControl(Node):
         
         self.flying = True
 
-    def set_position_NEU(self, target_position: tuple[float, float, float]):
+    def set_position_NWU(self, target_position: tuple[float, float, float]):
         '''
         (x, y, z)
         x: Forward/backward position
@@ -98,7 +98,7 @@ class OffboardControl(Node):
         '''
         target_x, target_y, target_z = target_position
         x = target_x
-        y = target_y
+        y = - target_y
         z = - target_z
 
         self._trajectory_setpoint_publisher.publish(
