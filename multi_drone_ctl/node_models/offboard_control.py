@@ -34,7 +34,7 @@ class OffboardControl(Node):
         self._vehicle_command_publisher = VehicleCommandPublisher(self, qos_profile, prefix)
 
         self._vehicle_local_position_receiver = VehicleLocalPositionReceiver(self, qos_profile, prefix)
-        self._vehicle_local_position_receiver.add_callback(self._vehicle_local_position_callback)
+        # self._vehicle_local_position_receiver.add_callback(self._vehicle_local_position_callback)
         
         self._vehicle_status_receiver = VehicleStatusReceiver(self, qos_profile, prefix)
         self._vehicle_status_receiver.add_callback(self._vehicle_status_callback)
@@ -89,22 +89,23 @@ class OffboardControl(Node):
         
         self.flying = True
 
-    def set_position_NWU(self, target_position: tuple[float, float, float]):
+    def set_position_without_gazebo(self, target_x: float, target_y: float, target_z: float) -> None:
         '''
         (x, y, z)
-        x: Forward/backward position
-        y: Right/left position
-        z: Up/down position
+        x: East/West position
+        y: North/South position
+        z: Up/Down position
         '''
-        target_x, target_y, target_z = target_position
-        x = target_x
-        y = - target_y
-        z = - target_z
+        if target_z < 2.0 or target_z > 10.0:
+            raise ValueError("Target Z position must be within 2.0 to 10.0 meters.")
+        if abs(target_x) > 5.0 or abs(target_y) > 5.0:
+            raise ValueError("Target X and Y positions must be within -5.0 to 5.0 meters.")
 
-        self._trajectory_setpoint_publisher.publish(
-            position=(x, y, z),
-            yaw=0.0,
-        )
+        self._target_x = target_y
+        self._target_y = target_x
+        self._target_z = - target_z
+
+        self.flying = True
 
     def get_position(self):
         self.abs_x = self.gazebo_x + self.vehicle_local_position.y
