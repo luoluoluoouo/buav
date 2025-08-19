@@ -36,37 +36,50 @@ class VehicleCommandPublisher(CommonPublisher):
             confirmation: int | None = None,
             from_external: bool | None = None) -> None:
 
-        command = VehicleCommand()
-        command.timestamp = int(self.node.get_clock().now().nanoseconds / 1000)
+        if command_id is None:
+            raise ValueError("command_id must be provided")
 
-        if command_id is not None:
-            command.command = command_id
+        msg = VehicleCommand()
+        msg.command = command_id
+        msg.param1 = 0.0
+        msg.param2 = 0.0
+        msg.param3 = 0.0
+        msg.param4 = 0.0
+        msg.param5 = 0.0
+        msg.param6 = 0.0
+        msg.param7 = 0.0
+        msg.target_system = 1
+        msg.target_component = 1
+        msg.source_system = 1
+        msg.source_component = 1
+        msg.from_external = True
+        msg.timestamp = int(self.node.get_clock().now().nanoseconds / 1000)
 
         if param1 is not None:
-            command.param1 = param1
+            msg.param1 = param1
         if param2 is not None:
-            command.param2 = param2
+            msg.param2 = param2
         if param3 is not None:
-            command.param3 = param3
+            msg.param3 = param3
         if param4 is not None:
-            command.param4 = param4
+            msg.param4 = param4
         if param5 is not None:
-            command.param5 = param5
+            msg.param5 = param5
         if param6 is not None:
-            command.param6 = param6
+            msg.param6 = param6
         if param7 is not None:
-            command.param7 = param7
+            msg.param7 = param7
         if target_system is not None:
-            command.target_system = target_system
+            msg.target_system = target_system
         if target_component is not None:
-            command.target_component = target_component
+            msg.target_component = target_component
         if source_system is not None:
-            command.source_system = source_system
+            msg.source_system = source_system
         if source_component is not None:
-            command.source_component = source_component
+            msg.source_component = source_component
         if confirmation is not None:
-            command.confirmation = confirmation
+            msg.confirmation = confirmation
         if from_external is not None:
-            command.from_external = from_external
+            msg.from_external = from_external
 
-        self.publisher.publish(command)
+        self.publisher.publish(msg)

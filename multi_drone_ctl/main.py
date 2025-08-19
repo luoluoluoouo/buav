@@ -77,8 +77,8 @@ class MultiDroneController():
         self.executor_thread.start()
 
     def position_setpoint(self, drone_id = 0, position: tuple = (0.0, 0.0, -5.0)):
-        drone = self.drones[drone_id]
-        drone.set_position(position)
+        """設定 drone 的位置目標點"""
+        self.drones[drone_id].set_position(*position)
 
     def update_drone1_beacon_position(self) -> None:
         """動態更新 drone1 作為移動信標的位置"""
@@ -190,12 +190,14 @@ class MultiDroneController():
 def cmd_arm(controller: MultiDroneController) -> None:
     """Arm all drones"""
     for drone in controller.drones:
-        drone.arm()
+        if not drone.is_armed():
+            drone.arm()
 
 def cmd_disarm(controller: MultiDroneController) -> None:
     """Disarm all drones"""
     for drone in controller.drones:
-        drone.disarm()
+        if drone.is_armed():
+            drone.disarm()
 
 def cmd_land(controller: MultiDroneController) -> None:
     """Land all drones"""
@@ -244,8 +246,8 @@ def main(args=None) -> None:
     
     print("=== Multi-Drone BLE Localization Controller ===")
     print("Available commands:")
-    print("  arm  - Arm all drones")
-    print("  set  - Set position for a specific drone")
+    print("  arm  - Manual Arm all drones")
+    print("  set  - Set position for a specific drone (will arm if not armed)")
     print("  est  - Estimate position using BLE beacons")
     print("  coop - Cooperative localization (Drone1 as moving beacon)")
     print("  land - Land all drones")
@@ -273,16 +275,34 @@ def main(args=None) -> None:
             break
     
     print("Shutting down...")
-    
-    for drone in controller.drones:
-        drone.land()
-        drone.disarm()
-    
-    controller.executor.shutdown()
-    rclpy.shutdown()
+    shutdown_everything(controller)
 
 if __name__ == '__main__':
     try:
         main()
     except Exception as e:
         print(e)
+
+def shutdown_everything(controller: MultiDroneController) -> None:
+    try:
+        controller.executor.shutdown()
+    except:
+        pass
+    for drone in controller.drones:
+        try:
+            drone.destroy_node()
+        except:
+            pass
+    for beacon in controller.beacons:
+        try:
+            beacon.destroy_node()
+        except:
+            pass
+    try:
+        controller.drone1_beacon.destroy_node()
+    except:
+        pass
+    try:
+        rclpy.shutdown()
+    except:
+        pass

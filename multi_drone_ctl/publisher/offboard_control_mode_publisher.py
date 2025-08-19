@@ -41,3 +41,14 @@ class OffboardControlModePublisher(CommonPublisher):
             command.direct_actuator = direct_actuator
 
         self.publisher.publish(command)
+    
+    def heartbeat(self) -> None:
+        self.publish(
+            position=True,
+            velocity=False,
+            acceleration=False,
+            attitude=False,
+            body_rate=False,
+            thrust_and_torque=False,
+            direct_actuator=False
+        )

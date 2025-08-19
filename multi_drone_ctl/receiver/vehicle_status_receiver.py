@@ -1,8 +1,8 @@
 from .common_receiver import CommonReceiver
 
-from typing import Protocol
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
+from typing import Protocol, Callable, List, Any
 
 from px4_msgs.msg import VehicleStatus  # type: ignore
 
@@ -156,15 +156,15 @@ class VehicleStatusReceiver(CommonReceiver):
             self._listener_callback,
             qos_profile
         )
-        self.callbacks = []
+        self.callbacks: List[Callable[[VehicleStatusMsg], Any]] = []
     
-    def add_callback(self, callback) -> None:
+    def add_callback(self, callback: Callable[[VehicleStatusMsg], Any]) -> None:
         if callable(callback):
             self.callbacks.append(callback)
         else:
             raise TypeError("Callback must be a callable function")
 
-    def _listener_callback(self, msg) -> None:
+    def _listener_callback(self, msg: VehicleStatusMsg) -> None:
         for callback in self.callbacks:
             callback(msg)
     
