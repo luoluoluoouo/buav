@@ -89,12 +89,13 @@ class OffboardControl(Node):
         
         self.flying = True
 
-    def set_position_without_gazebo(self, target_x: float, target_y: float, target_z: float) -> None:
+    def set_position_without_gazebo(self, target_x: float, target_y: float, target_z: float, target_yaw: float) -> None:
         '''
         (x, y, z)
         x: East/West position
         y: North/South position
         z: Up/Down position
+        yaw: Yaw angle
         '''
         if target_z < 2.0 or target_z > 10.0:
             raise ValueError("Target Z position must be within 2.0 to 10.0 meters.")
@@ -104,6 +105,7 @@ class OffboardControl(Node):
         self._target_x = target_y
         self._target_y = target_x
         self._target_z = - target_z
+        self._target_yaw = target_yaw
 
         self.flying = True
 

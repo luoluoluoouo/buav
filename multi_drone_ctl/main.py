@@ -69,8 +69,8 @@ class MultiDroneController():
         self.executor_thread = Thread(target=self._run_executor, args=(self.executor,))
         self.executor_thread.start()
 
-    def position_setpoint(self, drone_id = 0, position: tuple = (0.0, 0.0, -5.0)):
-        self.drones[drone_id].set_position_without_gazebo(*position)
+    def position_setpoint(self, drone_id = 0, position: tuple = (0.0, 0.0, -5.0), target_yaw: float = 0.0):
+        self.drones[drone_id].set_position_without_gazebo(*position, target_yaw=target_yaw)
 
     def update_drone1_beacon_position(self) -> None:
         """動態更新 drone1 作為移動信標的位置"""
@@ -107,8 +107,10 @@ def cmd_set(controller: MultiDroneController) -> None:
     x = float(input("Enter x position: ").strip())
     y = float(input("Enter y position: ").strip())
     z = float(input("Enter z position: ").strip())
+    target_yaw = float(input("Enter target yaw (degrees): ").strip())
+    target_yaw = math.radians(target_yaw) 
 
-    controller.position_setpoint(drone_id, (x, y, z))
+    controller.position_setpoint(drone_id, (x, y, z), target_yaw=target_yaw)
 
 
 def main(args=None) -> None:
