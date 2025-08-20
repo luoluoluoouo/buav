@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -80,34 +81,92 @@ class OffboardControl(Node):
         
         self.flying = False
 
-    def set_absolute_position(self, is_gazebo: bool = False, target_x: float = 0.0, target_y: float = 0.0, target_z: float = 0.0, target_yaw: float = 0.0) -> None:
-        if target_z < 2.0:
-            self.get_logger().error("Target Z position must be at least 2.0 meters above the ground.")
-            raise ValueError("Target Z position must be at least 2.0 meters above the ground.")
-        if abs(target_x) > 5.0 or abs(target_y) > 5.0:
-            self.get_logger().error("Target X and Y positions must be within -5.0 to 5.0 meters.")
-            raise ValueError("Target X and Y positions must be within -5.0 to 5.0 meters.")
-        if target_yaw < 0.0 or target_yaw > 2*math.pi:
-            self.get_logger().error("Target yaw must be between 0 and 360 degrees.")
-            raise ValueError("Target yaw must be between 0 and 360 degrees.")
-        
-        if is_gazebo:
-            self._target_x = target_y - self.gazebo_y
-            self._target_y = target_x - self.gazebo_x
-            self._target_z = self.gazebo_z - target_z
-        else:
-            self._target_x = target_y
-            self._target_y = target_x
-            self._target_z = - target_z
+    def _ENU2NED(self, ENU_pos: np.ndarray) -> np.ndarray:
+        """
+        Convert ENU (East, North, Up) coordinates to NED (North, East, Down) coordinates.
+        Input is a numpy array of shape (4,) representing (East, North, Up, Yaw) in ENU frame.
+        Output is a numpy array of shape (4,) representing (North, East, Down, Yaw) in NED frame.
+        """
+        NED_pos = np.array([ENU_pos[1], ENU_pos[0], -ENU_pos[2], -ENU_pos[3]], dtype=float)
+        return NED_pos
 
-        self._target_yaw = - target_yaw
+    def _NED2ENU(self, NED_pos: np.ndarray) -> np.ndarray:
+        """
+        Convert NED (North, East, Down) coordinates to ENU (East, North, Up) coordinates.
+        Input is a numpy array of shape (4,) representing (North, East, Down, Yaw) in NED frame.
+        Output is a numpy array of shape (4,) representing (East, North, Up, Yaw) in ENU frame.
+        """
+        ENU_pos = np.array([NED_pos[1], NED_pos[0], -NED_pos[2], -NED_pos[3]], dtype=float)
+        return ENU_pos
+
+    def _ENU_pos_check(self, pos: np.ndarray) -> bool:
+        """
+        Check if the given ENU position is valid.
+        """
+        if pos[2] < 2.0 or pos[2] > 6.0:
+            print("Target Z position must be between 2.0 and 6.0 meters above the ground.")
+            raise ValueError("Target Z position must be between 2.0 and 6.0 meters above the ground.")
+        if abs(pos[0]) > 5.0 or abs(pos[1]) > 5.0:
+            print("Target X and Y positions must be within -5.0 to 5.0 meters.")
+            raise ValueError("Target X and Y positions must be within -5.0 to 5.0 meters.")
+        if abs(pos[3]) > 2*math.pi:
+            print("Target yaw must be between -360 and 360 degrees.")
+            raise ValueError("Target yaw must be between -360 and 360 degrees.")
+        
+        return True
+
+    def set_absolute_position(self, abs_pos: np.ndarray, is_gazebo: bool = False) -> None:
+        """
+        Set the absolute position of the drone.
+        abs_pos: numpy array of shape (4,) representing in ENU frame (East, North, Up, Yaw).
+        is_gazebo: boolean flag indicating if the position is for Gazebo simulation.
+        """
+        if not self._ENU_pos_check(abs_pos):
+            return
+
+        abs_pos = self._ENU2NED(abs_pos)
+
+        self._target_x = abs_pos[0]
+        self._target_y = abs_pos[1]
+        self._target_z = abs_pos[2]
+        self._target_yaw = abs_pos[3]
 
         self.flying = True
+
+    def set_incremental_position(self, inc_pos: np.ndarray, is_gazebo: bool = False) -> None:
+        """
+        Set the incremental position of the drone.
+        increment: numpy array of shape (4,) representing (dEast, dNorth, dUp, dYaw) in ENU frame.
+        is_gazebo: boolean flag indicating if the position is for Gazebo simulation.
+        #TODO: is_gazebo pass
+        """
+        inc_pos = self._ENU2NED(inc_pos)
+
+        abs_pos = np.array([
+            self._target_x + inc_pos[0],
+            self._target_y + inc_pos[1],
+            self._target_z + inc_pos[2],
+            self._target_yaw + inc_pos[3]
+        ])
+
+        if not self._ENU_pos_check(self._NED2ENU(abs_pos)):
+            return
+
+        self._target_x = abs_pos[0]
+        self._target_y = abs_pos[1]
+        self._target_z = abs_pos[2]
+        self._target_yaw = abs_pos[3]
+
+        self.flying = True
+
+        pos = self._NED2ENU(abs_pos)
+        self.get_logger().info(f'Drone has set to x: {pos[0]}, y: {pos[1]}, z: {pos[2]}, yaw: {math.degrees(pos[3])}')
 
     def get_position(self):
         self.abs_x = self.gazebo_x + self.vehicle_local_position.y
         self.abs_y = self.gazebo_y + self.vehicle_local_position.x
         self.abs_z = self.gazebo_z - self.vehicle_local_position.z
+    
         return (self.abs_x, self.abs_y, self.abs_z)
 
     def is_armed(self) -> bool:

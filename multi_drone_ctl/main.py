@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import math
+import numpy as np
 
 from threading import Thread
 
@@ -70,8 +71,11 @@ class MultiDroneController():
         self.executor_thread = Thread(target=self._run_executor, args=(self.executor,))
         self.executor_thread.start()
 
-    def set_absolute_position_setpoint(self, drone_id = 0, target_x: float = 0.0, target_y: float = 0.0, target_z: float = 0.0, target_yaw: float = 0.0):
-        self.drones[drone_id].set_absolute_position(self.is_gazebo, target_x, target_y, target_z, target_yaw)
+    def set_absolute_position_setpoint(self, drone_id = 0, pos: np.ndarray = None): 
+        self.drones[drone_id].set_absolute_position(pos, self.is_gazebo)
+
+    def set_incremental_position_setpoint(self, drone_id = 0, inc_pos: np.ndarray = None):
+        self.drones[drone_id].set_incremental_position(inc_pos, self.is_gazebo)
 
     def update_drone1_beacon_position(self) -> None:
         """動態更新 drone1 作為移動信標的位置"""
@@ -104,14 +108,32 @@ def cmd_land(controller: MultiDroneController) -> None:
         drone.land()
 
 def cmd_abs(controller: MultiDroneController) -> None:
-    """Set absolute position for a specific drone"""
+    """
+    Set absolute position for a specific drone
+    In NEU (North, East, Up) coordinates
+    """
     drone_id = 0
     target_x = float(input("Enter x position (m): ").strip())
     target_y = float(input("Enter y position (m): ").strip())
     target_z = float(input("Enter z position (m): ").strip())
     target_yaw = math.radians(float(input("Enter target yaw (degrees): ").strip()))
+    abs_pos = (target_x, target_y, target_z, target_yaw)
 
-    controller.set_absolute_position_setpoint(drone_id, target_x, target_y, target_z, target_yaw)
+    controller.set_absolute_position_setpoint(drone_id, abs_pos)
+
+def cmd_inc(controller: MultiDroneController) -> None:
+    """
+    Set incremental position for a specific drone
+    In NEU (North, East, Up) coordinates
+    """
+    drone_id = 0
+    increment_x = float(input("Enter x position increment (m): ").strip())
+    increment_y = float(input("Enter y position increment (m): ").strip())
+    increment_z = float(input("Enter z position increment (m): ").strip())
+    increment_yaw = math.radians(float(input("Enter target yaw increment (degrees): ").strip()))
+    inc_pos = np.array([increment_x, increment_y, increment_z, increment_yaw])
+
+    controller.set_incremental_position_setpoint(drone_id, inc_pos)
 
 def main(args=None) -> None:
     rclpy.init(args=args)
@@ -121,6 +143,7 @@ def main(args=None) -> None:
     cmd_dict = {
         'arm': cmd_arm,
         'abs': cmd_abs,
+        'inc': cmd_inc,
         'disarm': cmd_disarm,
         'land': cmd_land,
     }
@@ -129,6 +152,7 @@ def main(args=None) -> None:
     print("Available commands:")
     print("  arm  - Arm all drones")
     print("  abs  - Set absolute position for a specific drone")
+    print("  inc  - Set incremental position for a specific drone")
     print("  land - Land all drones")
     print("  disarm - Disarm all drones")
     print("  quit - Exit program")
@@ -142,7 +166,7 @@ def main(args=None) -> None:
                 break
             
             if cmd not in cmd_dict:
-                print("Unknown command. Available commands: arm, set, disarm, land, est, coop, quit")
+                print("Unknown command. Available commands: arm, abs, inc, disarm, land, quit")
                 continue
             
             cmd_dict[cmd](controller)
