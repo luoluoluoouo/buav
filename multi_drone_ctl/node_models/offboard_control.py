@@ -1,6 +1,7 @@
+import math
+
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
-
 
 from ..publisher.trajectory_setpoint_publisher import TrajectorySetpointPublisher
 from ..publisher.offboard_control_mode_publisher import OffboardControlModePublisher
@@ -79,33 +80,27 @@ class OffboardControl(Node):
         
         self.flying = False
 
-    def set_position(self, target_x: float, target_y: float, target_z: float) -> None:
+    def set_absolute_position(self, is_gazebo: bool = False, target_x: float = 0.0, target_y: float = 0.0, target_z: float = 0.0, target_yaw: float = 0.0) -> None:
         if target_z < 2.0:
+            self.get_logger().error("Target Z position must be at least 2.0 meters above the ground.")
             raise ValueError("Target Z position must be at least 2.0 meters above the ground.")
-            
-        self._target_x = target_y - self.gazebo_y
-        self._target_y = target_x - self.gazebo_x
-        self._target_z = self.gazebo_z - target_z
-        
-        self.flying = True
-
-    def set_position_without_gazebo(self, target_x: float, target_y: float, target_z: float, target_yaw: float) -> None:
-        '''
-        (x, y, z)
-        x: East/West position
-        y: North/South position
-        z: Up/Down position
-        yaw: Yaw angle
-        '''
-        if target_z < 2.0 or target_z > 10.0:
-            raise ValueError("Target Z position must be within 2.0 to 10.0 meters.")
         if abs(target_x) > 5.0 or abs(target_y) > 5.0:
+            self.get_logger().error("Target X and Y positions must be within -5.0 to 5.0 meters.")
             raise ValueError("Target X and Y positions must be within -5.0 to 5.0 meters.")
+        if target_yaw < 0.0 or target_yaw > 2*math.pi:
+            self.get_logger().error("Target yaw must be between 0 and 360 degrees.")
+            raise ValueError("Target yaw must be between 0 and 360 degrees.")
+        
+        if is_gazebo:
+            self._target_x = target_y - self.gazebo_y
+            self._target_y = target_x - self.gazebo_x
+            self._target_z = self.gazebo_z - target_z
+        else:
+            self._target_x = target_y
+            self._target_y = target_x
+            self._target_z = - target_z
 
-        self._target_x = target_y
-        self._target_y = target_x
-        self._target_z = - target_z
-        self._target_yaw = target_yaw
+        self._target_yaw = - target_yaw
 
         self.flying = True
 

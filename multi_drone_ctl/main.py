@@ -27,6 +27,7 @@ class MultiDroneController():
             prefix = '',
             target_system = 1,
             gazebo_position = (0.0, 3.0, 0.0))
+        self.is_gazebo = False
 
         self.drones = [ drone ]
 
@@ -69,8 +70,8 @@ class MultiDroneController():
         self.executor_thread = Thread(target=self._run_executor, args=(self.executor,))
         self.executor_thread.start()
 
-    def position_setpoint(self, drone_id = 0, position: tuple = (0.0, 0.0, -5.0), target_yaw: float = 0.0):
-        self.drones[drone_id].set_position_without_gazebo(*position, target_yaw=target_yaw)
+    def set_absolute_position_setpoint(self, drone_id = 0, target_x: float = 0.0, target_y: float = 0.0, target_z: float = 0.0, target_yaw: float = 0.0):
+        self.drones[drone_id].set_absolute_position(self.is_gazebo, target_x, target_y, target_z, target_yaw)
 
     def update_drone1_beacon_position(self) -> None:
         """動態更新 drone1 作為移動信標的位置"""
@@ -102,16 +103,15 @@ def cmd_land(controller: MultiDroneController) -> None:
     for drone in controller.drones:
         drone.land()
 
-def cmd_set(controller: MultiDroneController) -> None:
+def cmd_abs(controller: MultiDroneController) -> None:
+    """Set absolute position for a specific drone"""
     drone_id = 0
-    x = float(input("Enter x position: ").strip())
-    y = float(input("Enter y position: ").strip())
-    z = float(input("Enter z position: ").strip())
-    target_yaw = float(input("Enter target yaw (degrees): ").strip())
-    target_yaw = math.radians(target_yaw) 
+    target_x = float(input("Enter x position (m): ").strip())
+    target_y = float(input("Enter y position (m): ").strip())
+    target_z = float(input("Enter z position (m): ").strip())
+    target_yaw = math.radians(float(input("Enter target yaw (degrees): ").strip()))
 
-    controller.position_setpoint(drone_id, (x, y, z), target_yaw=target_yaw)
-
+    controller.set_absolute_position_setpoint(drone_id, target_x, target_y, target_z, target_yaw)
 
 def main(args=None) -> None:
     rclpy.init(args=args)
@@ -120,7 +120,7 @@ def main(args=None) -> None:
 
     cmd_dict = {
         'arm': cmd_arm,
-        'set': cmd_set,
+        'abs': cmd_abs,
         'disarm': cmd_disarm,
         'land': cmd_land,
     }
@@ -128,7 +128,7 @@ def main(args=None) -> None:
     print("=== Multi-Drone BLE Localization Controller ===")
     print("Available commands:")
     print("  arm  - Arm all drones")
-    print("  set  - Set position for a specific drone")
+    print("  abs  - Set absolute position for a specific drone")
     print("  land - Land all drones")
     print("  disarm - Disarm all drones")
     print("  quit - Exit program")
