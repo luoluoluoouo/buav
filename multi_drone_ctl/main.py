@@ -27,9 +27,9 @@ class MultiDroneController():
             name = 'drone',
             prefix = '',
             target_system = 1,
-            gazebo_position = (0.0, 3.0, 0.0))
-        self.is_gazebo = False
-
+            gazebo_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
+            is_gazebo = False
+        )
         self.drones = [ drone ]
 
         self.RSSI_SETTINGS = {'rssi0': -50.0, 'path_loss_n': 2.0, 'noise_stddev': 1.0}
@@ -72,10 +72,10 @@ class MultiDroneController():
         self.executor_thread.start()
 
     def set_absolute_position_setpoint(self, drone_id = 0, pos: np.ndarray = None): 
-        self.drones[drone_id].set_absolute_position(pos, self.is_gazebo)
+        self.drones[drone_id].set_absolute_position(pos)
 
     def set_incremental_position_setpoint(self, drone_id = 0, inc_pos: np.ndarray = None):
-        self.drones[drone_id].set_incremental_position(inc_pos, self.is_gazebo)
+        self.drones[drone_id].set_incremental_position(inc_pos)
 
     def update_drone1_beacon_position(self) -> None:
         """動態更新 drone1 作為移動信標的位置"""
