@@ -2,58 +2,64 @@
 <sdf version="1.6">
   <world name="ble_world">
     <!-- 可選的光源和地板 -->
-    <include><uri>model://sun</uri></include>
-    <include><uri>model://ground_plane</uri></include>
+  <include>
+    <uri>file:///usr/share/gazebo-11/models/sun</uri>
+  </include>
+
+  <include>
+    <uri>file:///usr/share/gazebo-11/models/ground_plane</uri>
+  </include>
+
 
     <!-- 四個藍色正方形 beacon -->
     <model name="ble_beacon_1">
       <static>true</static>
-      <pose>0 0 0.1 0 0 0</pose>
+      <pose>5 5 0.1 0 0 0</pose>
       <link name="link">
-        <visual name="visual">
-          <geometry><box><size>0.2 0.2 0.2</size></box></geometry>
-          <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
-        </visual>
+      <visual name="visual">
+        <geometry><box><size>0.2 0.2 0.2</size></box></geometry>
+        <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
+      </visual>
       </link>
     </model>
 
     <model name="ble_beacon_2">
       <static>true</static>
-      <pose>10 0 0.1 0 0 0</pose>
+      <pose>5 -5 0.1 0 0 0</pose>
       <link name="link">
-        <visual name="visual">
-          <geometry><box><size>0.2 0.2 0.2</size></box></geometry>
-          <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
-        </visual>
+      <visual name="visual">
+        <geometry><box><size>0.2 0.2 0.2</size></box></geometry>
+        <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
+      </visual>
       </link>
     </model>
 
     <model name="ble_beacon_3">
       <static>true</static>
-      <pose>0 10 0.1 0 0 0</pose>
+      <pose>-5 5 0.1 0 0 0</pose>
       <link name="link">
-        <visual name="visual">
-          <geometry><box><size>0.2 0.2 0.2</size></box></geometry>
-          <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
-        </visual>
+      <visual name="visual">
+        <geometry><box><size>0.2 0.2 0.2</size></box></geometry>
+        <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
+      </visual>
       </link>
     </model>
 
     <model name="ble_beacon_4">
       <static>true</static>
-      <pose>10 10 0.1 0 0 0</pose>
+      <pose>-5 -5 0.1 0 0 0</pose>
       <link name="link">
-        <visual name="visual">
-          <geometry><box><size>0.2 0.2 0.2</size></box></geometry>
-          <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
-        </visual>
+      <visual name="visual">
+        <geometry><box><size>0.2 0.2 0.2</size></box></geometry>
+        <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
+      </visual>
       </link>
     </model>
 
     <!-- 中央掃描目標 - 紅色立方體作為視覺標記 -->
     <model name="scan_target">
       <static>true</static>
-      <pose>5 5 0.5 0 0 0</pose>
+      <pose>0 0 5 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><box><size>1.0 1.0 1.0</size></box></geometry>
