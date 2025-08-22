@@ -21,45 +21,9 @@ qos_profile = QoSProfile(
 )
 
 class MultiDroneController():
-    def __init__(self):    
-        drone = OffboardControl(
-            qos_profile = qos_profile,
-            name = 'drone',
-            prefix = '',
-            target_system = 1,
-            gazebo_position = (0.0, 3.0, 0.0))
-        self.is_gazebo = False
-
-        self.drones = [ drone ]
-
-        self.RSSI_SETTINGS = {'rssi0': -50.0, 'path_loss_n': 2.0, 'noise_stddev': 1.0}
-        
-        beacon_1 = BLEbeacon(
-            node_name='beacon1',
-            position=(0.0, 0.0, 0.0),
-            rssi_settings=self.RSSI_SETTINGS)
-        
-        beacon_2 = BLEbeacon(
-            node_name='beacon2',
-            position=(10.0, 0.0, 0.0),
-            rssi_settings=self.RSSI_SETTINGS)
-        
-        beacon_3 = BLEbeacon(
-            node_name='beacon3',
-            position=(0.0, 10.0, 0.0), \
-            rssi_settings=self.RSSI_SETTINGS)
-        
-        beacon_4 = BLEbeacon(node_name='beacon4',
-            position=(10.0, 10.0, 0.0),
-            rssi_settings=self.RSSI_SETTINGS)
-
-        self.beacons = [ beacon_1, beacon_2, beacon_3, beacon_4 ]
-
-        # Drone1 作為移動 BLE 信標（協同定位用）
-        self.drone1_beacon = BLEbeacon(
-            node_name='drone1_beacon',
-            position=(0.0, 0.0, 0.0),
-            rssi_settings=self.RSSI_SETTINGS)
+    def __init__(self, is_gazebo = False, drones = list[OffboardControl] = None):
+        self.drones = drones if drones is not None else []
+        self.is_gazebo = is_gazebo
 
         self.executor = MultiThreadedExecutor()
         for drone in self.drones:
