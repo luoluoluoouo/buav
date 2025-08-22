@@ -21,16 +21,13 @@ qos_profile = QoSProfile(
 )
 
 class MultiDroneController():
-    def __init__(self, is_gazebo = False, drones = list[OffboardControl] = None):
+    def __init__(self, is_gazebo: bool = False, drones: list[OffboardControl] = None):
         self.drones = drones if drones is not None else []
         self.is_gazebo = is_gazebo
 
         self.executor = MultiThreadedExecutor()
         for drone in self.drones:
             self.executor.add_node(drone)
-        for beacon in self.beacons:
-            self.executor.add_node(beacon)
-        self.executor.add_node(self.drone1_beacon)
 
         self.executor_thread = Thread(target=self._run_executor, args=(self.executor,))
         self.executor_thread.start()
@@ -215,11 +212,11 @@ def shutdown_everything(controller: MultiDroneController) -> None:
             drone.destroy_node()
         except:
             pass
-    for beacon in controller.beacons:
-        try:
-            beacon.destroy_node()
-        except:
-            pass
+    # for beacon in controller.beacons:
+    #     try:
+    #         beacon.destroy_node()
+    #     except:
+    #         pass
     try:
         controller.drone1_beacon.destroy_node()
     except:
