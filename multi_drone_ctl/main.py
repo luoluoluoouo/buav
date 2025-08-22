@@ -21,45 +21,9 @@ qos_profile = QoSProfile(
 )
 
 class MultiDroneController():
-    def __init__(self):    
-        drone = OffboardControl(
-            qos_profile = qos_profile,
-            name = 'drone',
-            prefix = '',
-            target_system = 1,
-            gazebo_position = (0.0, 3.0, 0.0))
-        self.is_gazebo = False
-
-        self.drones = [ drone ]
-
-        self.RSSI_SETTINGS = {'rssi0': -50.0, 'path_loss_n': 2.0, 'noise_stddev': 1.0}
-        
-        beacon_1 = BLEbeacon(
-            node_name='beacon1',
-            position=(0.0, 0.0, 0.0),
-            rssi_settings=self.RSSI_SETTINGS)
-        
-        beacon_2 = BLEbeacon(
-            node_name='beacon2',
-            position=(10.0, 0.0, 0.0),
-            rssi_settings=self.RSSI_SETTINGS)
-        
-        beacon_3 = BLEbeacon(
-            node_name='beacon3',
-            position=(0.0, 10.0, 0.0), \
-            rssi_settings=self.RSSI_SETTINGS)
-        
-        beacon_4 = BLEbeacon(node_name='beacon4',
-            position=(10.0, 10.0, 0.0),
-            rssi_settings=self.RSSI_SETTINGS)
-
-        self.beacons = [ beacon_1, beacon_2, beacon_3, beacon_4 ]
-
-        # Drone1 作為移動 BLE 信標（協同定位用）
-        self.drone1_beacon = BLEbeacon(
-            node_name='drone1_beacon',
-            position=(0.0, 0.0, 0.0),
-            rssi_settings=self.RSSI_SETTINGS)
+    def __init__(self, is_gazebo: bool = False, drones: list[OffboardControl] = None):
+        self.drones = drones if drones is not None else []
+        self.is_gazebo = is_gazebo
 
         self.executor = MultiThreadedExecutor()
         for drone in self.drones:
@@ -76,13 +40,6 @@ class MultiDroneController():
 
     def set_incremental_position_setpoint(self, drone_id = 0, inc_pos: np.ndarray = None):
         self.drones[drone_id].set_incremental_position(inc_pos, self.is_gazebo)
-
-    def update_drone1_beacon_position(self) -> None:
-        """動態更新 drone1 作為移動信標的位置"""
-        try:
-            self.drone1_beacon.position = self.drones[0].get_position()
-        except Exception:
-            pass
 
     def _run_executor(self, executor: MultiThreadedExecutor):
         try:
@@ -112,7 +69,7 @@ def cmd_abs(controller: MultiDroneController) -> None:
     Set absolute position for a specific drone
     In NEU (North, East, Up) coordinates
     """
-    drone_id = 0
+    drone_id = int(input("Enter drone ID: ").strip())
     target_x = float(input("Enter x position (m): ").strip())
     target_y = float(input("Enter y position (m): ").strip())
     target_z = float(input("Enter z position (m): ").strip())
@@ -126,7 +83,7 @@ def cmd_inc(controller: MultiDroneController) -> None:
     Set incremental position for a specific drone
     In NEU (North, East, Up) coordinates
     """
-    drone_id = 0
+    drone_id = int(input("Enter drone ID: ").strip())
     increment_x = float(input("Enter x position increment (m): ").strip())
     increment_y = float(input("Enter y position increment (m): ").strip())
     increment_z = float(input("Enter z position increment (m): ").strip())
@@ -180,9 +137,71 @@ def main(args=None) -> None:
     print("Shutting down...")
     shutdown_everything(controller)
 
+def sim(args=None) -> None:
+    rclpy.init(args=args)
+
+    drone_1 = OffboardControl(
+        qos_profile = qos_profile,
+        name = 'drone_1',
+        prefix = '/px4_1',
+        target_system = 2,
+        gazebo_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
+        is_gazebo = False
+    )
+    drone_2 = OffboardControl(
+        qos_profile = qos_profile,
+        name = 'drone_2',
+        prefix = '/px4_2',
+        target_system = 3,
+        gazebo_pos = np.array([0.0, 3.0, 0.0, 0.0]),  # x, y, z, yaw
+        is_gazebo = False
+    )
+    controller = MultiDroneController(is_gazebo=True, drones=[drone_1, drone_2])
+
+    cmd_dict = {
+        'arm': cmd_arm,
+        'abs': cmd_abs,
+        'inc': cmd_inc,
+        'disarm': cmd_disarm,
+        'land': cmd_land,
+    }
+    
+    print("=== Multi-Drone BLE Localization Controller ===")
+    print("Available commands:")
+    print("  arm  - Arm all drones")
+    print("  abs  - Set absolute position for a specific drone")
+    print("  inc  - Set incremental position for a specific drone")
+    print("  land - Land all drones")
+    print("  disarm - Disarm all drones")
+    print("  quit - Exit program")
+    print()
+
+    while rclpy.ok():
+        try:
+            cmd = input("Enter command: ").strip().lower()
+            
+            if cmd in ['quit', 'exit', 'q']:
+                break
+            
+            if cmd not in cmd_dict:
+                print("Unknown command. Available commands: arm, abs, inc, disarm, land, quit")
+                continue
+            
+            cmd_dict[cmd](controller)
+        except ValueError as e:
+            print(f"Input error: {e}")
+        except Exception as e:
+            print(f"Error executing command: {e}")
+        except:
+            break
+    
+    print("Shutting down...")
+    shutdown_everything(controller)
+
 if __name__ == '__main__':
     try:
         main()
+        # sim()
     except Exception as e:
         print(e)
 
