@@ -15,17 +15,19 @@ from ..receiver.vehicle_command_ack import VehicleCommandAckReceiver, VehicleCom
 class OffboardControl(Node):
     """Node for controlling a vehicle in offboard mode."""
 
-    def __init__(self, qos_profile: QoSProfile, name: str, prefix: str, target_system: int, gazebo_position: tuple[float, float, float]) -> None:
+    def __init__(self, qos_profile: QoSProfile, name: str, prefix: str, target_system: int, gazebo_pos: np.ndarray, is_gazebo = False) -> None:
         super().__init__(f'offboard_control_{name}')
 
         self.prefix = prefix
         self.target_system = target_system
-        self.gazebo_x, self.gazebo_y, self.gazebo_z = gazebo_position
-        
-        self.x = self.gazebo_x
-        self.y = self.gazebo_y
-        self.z = self.gazebo_z
-        
+
+        self.gazebo_pos = self._ENU2NED(gazebo_pos)
+        self.x = self.gazebo_pos[0]
+        self.y = self.gazebo_pos[1]
+        self.z = self.gazebo_pos[2]
+        self.yaw = self.gazebo_pos[3]
+        self.is_gazebo = is_gazebo
+
         self._target_x = 0.0
         self._target_y = 0.0
         self._target_z = 0.0
@@ -115,11 +117,10 @@ class OffboardControl(Node):
         
         return True
 
-    def set_absolute_position(self, abs_pos: np.ndarray, is_gazebo: bool = False) -> None:
+    def set_absolute_position(self, abs_pos: np.ndarray) -> None:
         """
         Set the absolute position of the drone.
         abs_pos: numpy array of shape (4,) representing in ENU frame (East, North, Up, Yaw).
-        is_gazebo: boolean flag indicating if the position is for Gazebo simulation.
         """
         if not self._ENU_pos_check(abs_pos):
             return
@@ -133,12 +134,10 @@ class OffboardControl(Node):
 
         self.flying = True
 
-    def set_incremental_position(self, inc_pos: np.ndarray, is_gazebo: bool = False) -> None:
+    def set_incremental_position(self, inc_pos: np.ndarray) -> None:
         """
         Set the incremental position of the drone.
         increment: numpy array of shape (4,) representing (dEast, dNorth, dUp, dYaw) in ENU frame.
-        is_gazebo: boolean flag indicating if the position is for Gazebo simulation.
-        #TODO: is_gazebo pass
         """
         inc_pos = self._ENU2NED(inc_pos)
 
@@ -196,11 +195,22 @@ class OffboardControl(Node):
             
         if self.flying:
             self._keep_status()
-            self._trajectory_setpoint_publisher.publish(
-                position=(self._target_x, self._target_y, self._target_z),
-                yaw=self._target_yaw
-            )
-            
+
+            if self.is_gazebo:
+                self._trajectory_setpoint_publisher.publish(
+                    position=(self._target_x + self.gazebo_x,
+                              self._target_y + self.gazebo_y,
+                              self._target_z + self.gazebo_z),
+                    yaw=self._target_yaw + self.gazebo_yaw
+                )
+            else:
+                self._trajectory_setpoint_publisher.publish(
+                    position=(self._target_x,
+                              self._target_y,
+                              self._target_z),
+                    yaw=self._target_yaw
+                )
+
         if self.offboard_setpoint_counter < 16:
             self.offboard_setpoint_counter += 1
     
