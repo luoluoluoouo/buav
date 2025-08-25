@@ -92,7 +92,16 @@ def cmd_inc(controller: MultiDroneController) -> None:
 def main(args=None) -> None:
     rclpy.init(args=args)
 
-    controller = MultiDroneController()
+
+    drone_0 = OffboardControl(
+        qos_profile = qos_profile,
+        name = 'drone_0',
+        prefix = '',
+        target_system = 1,
+        gazebo_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
+        is_gazebo = False
+    )
+    controller = MultiDroneController(is_gazebo=False, drones=[drone_0])
 
     cmd_dict = {
         'arm': cmd_arm,
