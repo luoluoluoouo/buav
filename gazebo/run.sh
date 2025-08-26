@@ -28,12 +28,12 @@ cleanup() {
     exit 0
 }
 
-pkill -f 'gz sim|ign gazebo|gazebo' 2>/dev/null
+# pkill -f 'gz sim|ign gazebo|gazebo' 2>/dev/null
 
 # 捕獲 SIGINT (Ctrl+C) 和 SIGTERM
 trap cleanup INT TERM
 
-kill -9 $(lsof -t -i :11345) 2>/dev/null
+# kill -9 $(lsof -t -i :11345) 2>/dev/null
 kill -9 $(lsof -t -i :8888) 2>/dev/null
 
 # 取得腳本所在資料夾的絕對路徑
@@ -49,10 +49,13 @@ python3 send_heartbeat.py &
 
 sleep 3
 
-PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500 PX4_GZ_MODEL_POSE="0,3" \
+# PX4_GZ_WORLD=../../../../../px4_ros2_ws/src/multi_drone_ctl/gazebo/ble \
+PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500_depth PX4_GZ_MODEL_POSE="0,3" \
 $PX4_AUTOPILOT_PATH/build/px4_sitl_default/bin/px4 -i 1 &
 PX4_GZ_STANDALONE=1 PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500 PX4_GZ_MODEL_POSE="0,-3" \
 $PX4_AUTOPILOT_PATH/build/px4_sitl_default/bin/px4 -i 2 &
+
+ros2 run tf2_ros static_transform_publisher   0 0 0 0 0 0 map 'x500_depth_1/camera_link/StereoOV7251' &
 
 # PX4_GZ_STANDALONE=1 PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500 PX4_GZ_MODEL_POSE="0,0" \
 # $PX4_AUTOPILOT_PATH/build/px4_sitl_default/bin/px4 -i 0 &
