@@ -44,9 +44,9 @@ source /opt/ros/$ROS_DISTRO/setup.bash
 
 # 方法2: 手動編譯運行
 cd /home/ada/luoluo/px4_ros2_ws
-colcon build --symlink-install --packages-select multi_drone_ctl
+colcon build --symlink-install --packages-select buav
 source install/setup.bash
-python3 src/multi_drone_ctl/multi_drone_ctl/drone_ctl.py 
+python3 src/buav/buav/drone_ctl.py 
 
 ```
 
@@ -118,8 +118,8 @@ rssi = rssi0 - 10 * path_loss_n * log10(distance) + noise
 ## 檔案結構
 
 ```
-multi_drone_ctl/
-├── multi_drone_ctl/
+buav/
+├── buav/
 │   ├── drone_ctl.py          # 主程式
 │   ├── config.yaml           # 配置文件  
 │   └── publisher/            # 發布者模組
@@ -152,7 +152,7 @@ multi_drone_ctl/
 ```bash
 # 啟用詳細日誌
 export RCUTILS_LOGGING_SEVERITY=DEBUG
-python3 -m multi_drone_ctl.drone_ctl
+python3 -m buav.drone_ctl
 ```
 
 ## 參數調整

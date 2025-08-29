@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-package_name = 'multi_drone_ctl'
+package_name = 'buav'
 
 setup(
     name=package_name,
@@ -15,8 +15,8 @@ setup(
     license='Apache License 2.0',
     entry_points={
         'console_scripts': [
-            'main = multi_drone_ctl.main:main',
-            'sim = multi_drone_ctl.main:sim'
+            'main = buav.main:main',
+            'sim = buav.main:sim'
         ],
     },
 )

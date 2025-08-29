@@ -49,7 +49,7 @@ python3 send_heartbeat.py &
 
 sleep 3
 
-# PX4_GZ_WORLD=../../../../../px4_ros2_ws/src/multi_drone_ctl/gazebo/ble \
+# PX4_GZ_WORLD=../../../../../px4_ros2_ws/src/buav/gazebo/ble \
 PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500_depth PX4_GZ_MODEL_POSE="0,3" \
 $PX4_AUTOPILOT_PATH/build/px4_sitl_default/bin/px4 -i 1 &
 PX4_GZ_STANDALONE=1 PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500 PX4_GZ_MODEL_POSE="0,-3" \

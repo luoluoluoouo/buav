@@ -1,4 +1,4 @@
-## multi_drone_ctl
+## buav
 
 ROS 2 node for PX4 multi-drone Offboard control with a simple RSSI beacon simulator. Includes a Gazebo Classic SITL script to launch two PX4 instances (`/px4_1`, `/px4_2`).
 
@@ -29,7 +29,7 @@ Prerequisites (Ubuntu + ROS 2):
 
 ```bash
 cd ~/px4_ros2_ws
-colcon build --packages-select multi_drone_ctl
+colcon build --packages-select buav
 source install/setup.bash
 ```
 
@@ -43,7 +43,7 @@ PX4 與 Gazebo 準備：
 啟動模擬：
 
 ```bash
-cd ~/px4_ros2_ws/src/multi_drone_ctl/gazebo
+cd ~/px4_ros2_ws/src/buav/gazebo
 bash run.sh
 ```
 
@@ -56,7 +56,7 @@ bash run.sh
 ```bash
 cd ~/px4_ros2_ws
 source install/setup.bash
-ros2 run multi_drone_ctl main
+ros2 run buav main
 ```
 
 啟動後進入互動模式：
@@ -73,8 +73,8 @@ ros2 run multi_drone_ctl main
 
 ## 設定與話題
 
-- 目前飛行器與信標參數在 `multi_drone_ctl/drone_ctl.py` 中硬編（`/px4_1` 與 `/px4_2` 各一台）。
-- `multi_drone_ctl/config.yaml` 提供參考配置（尚未在程式中載入）。
+- 目前飛行器與信標參數在 `buav/drone_ctl.py` 中硬編（`/px4_1` 與 `/px4_2` 各一台）。
+- `buav/config.yaml` 提供參考配置（尚未在程式中載入）。
 - 主要訂閱話題（每台機器人會含前綴 `/px4_X`）：
 	- `{prefix}/fmu/out/vehicle_local_position`
 	- `{prefix}/fmu/out/vehicle_status_v1`
@@ -96,7 +96,7 @@ ros2 run multi_drone_ctl main
 ## 測試與開發
 sudo lsof -i :8888
 - 建置完成後可執行基本測試工具（flake8、pep257）透過 `colcon test`。
-- 本套件入口點：`drone_ctl`（對應 `multi_drone_ctl/drone_ctl.py:main`）。
+- 本套件入口點：`drone_ctl`（對應 `buav/drone_ctl.py:main`）。
 
 —
 
