@@ -135,6 +135,27 @@ def cmd_inc(controller: MultiDroneController) -> None:
 
     controller.set_incremental_position_setpoint(drone_id, inc_pos)
 
+def cmd_offboard(controller: MultiDroneController) -> None:
+    """Force enable offboard mode"""
+    for drone in controller.drones:
+        drone.force_offboard_mode()
+    print("Offboard mode forced for all drones")
+
+def cmd_status(controller: MultiDroneController) -> None:
+    """Check current control status"""
+    for i, drone in enumerate(controller.drones):
+        status = drone.get_control_status()
+        print(f"\n=== Drone {i} Status ===")
+        print(f"Navigation State: {status['nav_state']} ({'Offboard' if status['offboard_mode'] else 'Manual' if status['manual_mode'] else 'Other'})")
+        print(f"Armed: {status['is_armed']}")
+        print(f"Flying: {status['is_flying']}")
+        print(f"Safe for Offboard: {drone.is_safe_for_offboard()}")
+        
+        if status['manual_mode']:
+            print("⚠️  WARNING: Vehicle is in MANUAL mode - offboard commands will be rejected!")
+        elif status['offboard_mode']:
+            print("✅ Vehicle is in OFFBOARD mode - ready for commands")
+
 def main(args=None) -> None:
     rclpy.init(args=args)
 
@@ -144,18 +165,25 @@ def main(args=None) -> None:
         'arm': cmd_arm,
         'abs': cmd_abs,
         'inc': cmd_inc,
+        'offboard': cmd_offboard,
+        'status': cmd_status,
         'disarm': cmd_disarm,
         'land': cmd_land,
     }
     
     print("=== Multi-Drone BLE Localization Controller ===")
     print("Available commands:")
-    print("  arm  - Arm all drones")
-    print("  abs  - Set absolute position for a specific drone")
-    print("  inc  - Set incremental position for a specific drone")
-    print("  land - Land all drones")
-    print("  disarm - Disarm all drones")
-    print("  quit - Exit program")
+    print("  arm     - Arm all drones")
+    print("  abs     - Set absolute position for a specific drone")
+    print("  inc     - Set incremental position for a specific drone")
+    print("  offboard- Force enable offboard mode")
+    print("  status  - Check current control status")
+    print("  land    - Land all drones")
+    print("  disarm  - Disarm all drones")
+    print("  quit    - Exit program")
+    print()
+    print("⚠️  SAFETY: Before using 'abs' or 'inc', ensure RC is not in manual mode!")
+    print("   Use 'status' command to check current mode.")
     print()
 
     while rclpy.ok():
@@ -166,7 +194,7 @@ def main(args=None) -> None:
                 break
             
             if cmd not in cmd_dict:
-                print("Unknown command. Available commands: arm, abs, inc, disarm, land, quit")
+                print("Unknown command. Available commands: arm, abs, inc, offboard, status, disarm, land, quit")
                 continue
             
             cmd_dict[cmd](controller)
