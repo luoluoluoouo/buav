@@ -28,6 +28,7 @@ cleanup() {
     exit 0
 }
 
+
 # pkill -f 'gz sim|ign gazebo|gazebo' 2>/dev/null
 
 # 捕獲 SIGINT (Ctrl+C) 和 SIGTERM
@@ -39,15 +40,14 @@ kill -9 $(lsof -t -i :8888) 2>/dev/null
 # 取得腳本所在資料夾的絕對路徑
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-touch $SCRIPT_DIR/logs/microxrceagent.log
-MicroXRCEAgent udp4 -p 8888 >$SCRIPT_DIR/logs/microxrceagent.log 2>&1 &
+cd "$SCRIPT_DIR"
+export $(grep -v '^#' .env | xargs) #PX4_AUTOPILOT_PATH=/your/path/to/PX4-Autopilot
 
-# Setting AutoPilot path
-export PX4_AUTOPILOT_PATH=/home/ada/luoluo/PX4-Autopilot
+MicroXRCEAgent udp4 -p 8888 &
 
 python3 send_heartbeat.py &
 
-sleep 3
+sleep 1
 
 # PX4_GZ_WORLD=../../../../../px4_ros2_ws/src/buav/gazebo/ble \
 PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500_depth PX4_GZ_MODEL_POSE="0,3" \
