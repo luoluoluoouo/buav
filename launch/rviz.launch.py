@@ -14,18 +14,18 @@ def generate_launch_description():
         Node(
             package="ros_gz_bridge",
             executable="parameter_bridge",
-            arguments=[f"/world/{world_name}/model/{drone_id}/link/camera_link/sensor/IMX214/image"
+            arguments=[f"/camera"
                        "@sensor_msgs/msg/Image@gz.msgs.Image"],
-            remappings=[(f"/world/{world_name}/model/{drone_id}/link/camera_link/sensor/IMX214/image",
+            remappings=[(f"/camera",
                          "/camera/image")]
         ),
         # CameraInfo
         Node(
             package="ros_gz_bridge",
             executable="parameter_bridge",
-            arguments=[f"/world/{world_name}/model/{drone_id}/link/camera_link/sensor/IMX214/camera_info"
+            arguments=[f"/camera_info"
                        "@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo"],
-            remappings=[(f"/world/{world_name}/model/{drone_id}/link/camera_link/sensor/IMX214/camera_info",
+            remappings=[(f"/camera_info",
                          "/camera/camera_info")]
         ),
         # PointCloud
@@ -42,7 +42,7 @@ def generate_launch_description():
         Node(
             package="tf2_ros",
             executable="static_transform_publisher",
-            arguments=["0", "0", "0", "0", "0", "0", "map", f"{drone_id}/camera_link/StereoOV7251"]
+            arguments=["0", "0", "0", "0", "0", "0", "map", f"{drone_id}/OakD-Lite/base_link/StereoOV7251"]
         ),
         # RViz2
         Node(
