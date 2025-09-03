@@ -89,6 +89,29 @@ def cmd_inc(controller: MultiDroneController) -> None:
 
     controller.set_incremental_position_setpoint(drone_id, inc_pos)
 
+def cmd_circular_scan(controller: MultiDroneController) -> None:
+    # drone_id = int(input("Enter drone ID: ").strip())
+    drone_id = 0
+
+    center_x = 0
+    center_y = 0
+    center_z = 3
+    radius = 2
+    yaw = math.pi/2
+    _step = math.radians(90)
+    _theta = math.radians(0)
+
+    # while _theta < 2*math.pi:
+    scan_pos = np.array([center_x + radius * np.cos(_theta), \
+                    center_y + radius * np.sin(_theta), \
+                center_z, \
+                _theta + yaw])
+    controller.set_absolute_position_setpoint(drone_id, scan_pos)
+    print(f"Set drone {drone_id} position to: {scan_pos}")
+    # input("Press Enter to continue to next point...")
+    # _theta += _step
+
+
 def main(args=None) -> None:
     rclpy.init(args=args)
 
@@ -109,6 +132,7 @@ def main(args=None) -> None:
         'inc': cmd_inc,
         'disarm': cmd_disarm,
         'land': cmd_land,
+        'scan': cmd_circular_scan
     }
     
     print("=== Multi-Drone BLE Localization Controller ===")
