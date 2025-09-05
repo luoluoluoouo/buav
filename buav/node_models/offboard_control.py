@@ -162,9 +162,9 @@ class OffboardControl(Node):
         self.get_logger().info(f'Drone has set to x: {pos[0]}, y: {pos[1]}, z: {pos[2]}, yaw: {math.degrees(pos[3])}')
 
     def get_position(self):
-        self.abs_x = self.gazebo_x + self.vehicle_local_position.y
-        self.abs_y = self.gazebo_y + self.vehicle_local_position.x
-        self.abs_z = self.gazebo_z - self.vehicle_local_position.z
+        self.abs_x = self.gazebo_pos[0] + self.vehicle_local_position.y
+        self.abs_y = self.gazebo_pos[1] + self.vehicle_local_position.x
+        self.abs_z = self.gazebo_pos[2] - self.vehicle_local_position.z
     
         return (self.abs_x, self.abs_y, self.abs_z)
 
@@ -198,10 +198,10 @@ class OffboardControl(Node):
 
             if self.is_gazebo:
                 self._trajectory_setpoint_publisher.publish(
-                    position=(self._target_x + self.gazebo_x,
-                              self._target_y + self.gazebo_y,
-                              self._target_z + self.gazebo_z),
-                    yaw=self._target_yaw + self.gazebo_yaw
+                    position=(self._target_x + self.gazebo_pos[0],
+                              self._target_y + self.gazebo_pos[1],
+                              self._target_z + self.gazebo_pos[2]),
+                    yaw=self._target_yaw + self.gazebo_pos[3]
                 )
             else:
                 self._trajectory_setpoint_publisher.publish(
