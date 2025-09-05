@@ -95,21 +95,27 @@ def cmd_circular_scan(controller: MultiDroneController) -> None:
 
     center_x = 0
     center_y = 0
-    center_z = 3
+    center_z = 2.5
     radius = 2
     yaw = math.pi/2
-    _step = math.radians(90)
+    _step = math.radians(60)
     _theta = math.radians(0)
 
-    # while _theta < 2*math.pi:
+    while _theta < 2*math.pi:
+        scan_pos = np.array([center_x + radius * np.cos(_theta), \
+                        center_y + radius * np.sin(_theta), \
+                    center_z, \
+                    _theta + yaw])
+        controller.set_absolute_position_setpoint(drone_id, scan_pos)
+        print(f"Set drone {drone_id} position to: {scan_pos}")
+        input("Press Enter to continue to next point...")
+        _theta += _step
+    _theta = math.radians(0)
     scan_pos = np.array([center_x + radius * np.cos(_theta), \
                     center_y + radius * np.sin(_theta), \
                 center_z, \
                 _theta + yaw])
     controller.set_absolute_position_setpoint(drone_id, scan_pos)
-    print(f"Set drone {drone_id} position to: {scan_pos}")
-    # input("Press Enter to continue to next point...")
-    # _theta += _step
 
 
 def main(args=None) -> None:
@@ -121,10 +127,10 @@ def main(args=None) -> None:
         name = 'drone_0',
         prefix = '',
         target_system = 1,
-        gazebo_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
-        is_gazebo = False
+        gazebo_pos = np.array([3.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
+        is_gazebo = True
     )
-    controller = MultiDroneController(is_gazebo=False, drones=[drone_0])
+    controller = MultiDroneController(is_gazebo=True, drones=[drone_0])
 
     cmd_dict = {
         'arm': cmd_arm,
