@@ -17,19 +17,32 @@ get_root_back() {
     echo "$out"
 }
 
+# 添加標誌防止重複清理
+CLEANING=false
 # 清理函數
 cleanup() {
+    # 防止重複執行清理
+    if [ "$CLEANING" = true ]; then
+        return
+    fi
+    CLEANING=true
+    
     echo "正在清理進程..."
+    
+    # 重置信號處理器避免重複觸發
+    trap - INT TERM
+
+    # 終止 send_heartbeat.py
+    pkill -9 -f send_heartbeat.py 2>/dev/null 
     kill -9 $(lsof -t -i :11345) 2>/dev/null
     kill -9 $(lsof -t -i :8888) 2>/dev/null
     pkill -f 'gz sim|ign gazebo|gazebo' 2>/dev/null
     # 殺掉所有背景進程
-    jobs -p | xargs -r kill -9
+    jobs -p | xargs -r kill -9 2>/dev/null
+    
+    echo "清理完成"
     exit 0
 }
-
-
-# pkill -f 'gz sim|ign gazebo|gazebo' 2>/dev/null
 
 # 捕獲 SIGINT (Ctrl+C) 和 SIGTERM
 trap cleanup INT TERM
@@ -49,16 +62,12 @@ python3 send_heartbeat.py &
 
 sleep 1
 
-# PX4_GZ_WORLD=../../../../../px4_ros2_ws/src/buav/gazebo/ble \
-PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500_depth PX4_GZ_MODEL_POSE="0,3" \
-$PX4_AUTOPILOT_PATH/build/px4_sitl_default/bin/px4 -i 1 &
-PX4_GZ_STANDALONE=1 PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500 PX4_GZ_MODEL_POSE="0,-3" \
-$PX4_AUTOPILOT_PATH/build/px4_sitl_default/bin/px4 -i 2 &
+ln -sf $SCRIPT_DIR/ble.sdf $PX4_AUTOPILOT_PATH/Tools/simulation/gz/worlds/default.sdf
 
-ros2 run tf2_ros static_transform_publisher   0 0 0 0 0 0 map 'x500_depth_1/camera_link/StereoOV7251' &
+PX4_SYS_AUTOSTART=4002 PX4_SIM_MODEL=gz_x500_depth PX4_GZ_MODEL_POSE="0,0" \
+$PX4_AUTOPILOT_PATH/build/px4_sitl_default/bin/px4 -i 0 &
 
-# PX4_GZ_STANDALONE=1 PX4_SYS_AUTOSTART=4001 PX4_SIM_MODEL=gz_x500 PX4_GZ_MODEL_POSE="0,0" \
-# $PX4_AUTOPILOT_PATH/build/px4_sitl_default/bin/px4 -i 0 &
+ros2 launch buav rviz.launch.py world_name:=default drone_name:=x500_depth_0 &
 
 # 等待信號
 echo "按 Ctrl+C 停止..."
