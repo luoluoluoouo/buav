@@ -28,11 +28,11 @@ class OffboardControl(Node):
         self.yaw = self.gazebo_pos[3]
         self.is_gazebo = is_gazebo
 
-        self._target_x = 0.0
-        self._target_y = 0.0
-        self._target_z = 0.0
-        self._target_yaw = 0.0
-        
+        self._target_x = self.x
+        self._target_y = self.y
+        self._target_z = self.z
+        self._target_yaw = self.yaw
+
         self._offboard_control_mode_publisher = OffboardControlModePublisher(self, qos_profile, prefix)
         self._trajectory_setpoint_publisher = TrajectorySetpointPublisher(self, qos_profile, prefix)
         self._vehicle_command_publisher = VehicleCommandPublisher(self, qos_profile, prefix)
@@ -198,10 +198,10 @@ class OffboardControl(Node):
 
             if self.is_gazebo:
                 self._trajectory_setpoint_publisher.publish(
-                    position=(self._target_x + self.gazebo_pos[0],
-                              self._target_y + self.gazebo_pos[1],
-                              self._target_z + self.gazebo_pos[2]),
-                    yaw=self._target_yaw + self.gazebo_pos[3]
+                    position=(self._target_x - self.gazebo_pos[0],
+                              self._target_y - self.gazebo_pos[1],
+                              self._target_z - self.gazebo_pos[2]),
+                    yaw=self._target_yaw - self.gazebo_pos[3]
                 )
             else:
                 self._trajectory_setpoint_publisher.publish(
