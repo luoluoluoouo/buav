@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import math
+from more_itertools import one
 import numpy as np
 
 from threading import Thread
@@ -32,90 +33,93 @@ class MultiDroneController():
         self.executor_thread = Thread(target=self._run_executor, args=(self.executor,))
         self.executor_thread.start()
 
-    def set_absolute_position_setpoint(self, drone_id = 0, pos: np.ndarray = None): 
-        self.drones[drone_id].set_absolute_position(pos)
-
-    def set_incremental_position_setpoint(self, drone_id = 0, inc_pos: np.ndarray = None):
-        self.drones[drone_id].set_incremental_position(inc_pos)
-
     def _run_executor(self, executor: MultiThreadedExecutor):
         try:
             executor.spin()
         except Exception as e:
             print(f"Executor error: {e}")
 
-def cmd_arm(controller: MultiDroneController) -> None:
-    """Arm all drones"""
-    for drone in controller.drones:
-        if not drone.is_armed():
-            drone.arm()
+    def _get_drone_id(self) -> int:
+        if len(self.drones) == 1:
+            return 0
+        else:
+            drone_id = int(input(f"Enter drone ID (0 to {len(self.drones)-1}): ").strip())
+            return drone_id
 
-def cmd_disarm(controller: MultiDroneController) -> None:
-    """Disarm all drones"""
-    for drone in controller.drones:
-        if drone.is_armed():
-            drone.disarm()
+    def cmd_arm(self) -> None:
+        """Arm all drones"""
+        for drone in self.drones:
+            if not drone.is_armed():
+                drone.arm()
 
-def cmd_land(controller: MultiDroneController) -> None:
-    """Land all drones"""
-    for drone in controller.drones:
-        drone.land()
+    def cmd_disarm(self) -> None:
+        """Disarm all drones"""
+        for drone in self.drones:
+            if drone.is_armed():
+                drone.disarm()
 
-def cmd_abs(controller: MultiDroneController) -> None:
-    """
-    Set absolute position for a specific drone
-    In NEU (North, East, Up) coordinates
-    """
-    drone_id = int(input("Enter drone ID: ").strip())
-    target_x = float(input("Enter x position (m): ").strip())
-    target_y = float(input("Enter y position (m): ").strip())
-    target_z = float(input("Enter z position (m): ").strip())
-    target_yaw = math.radians(float(input("Enter target yaw (degrees): ").strip()))
-    abs_pos = (target_x, target_y, target_z, target_yaw)
+    def cmd_land(self) -> None:
+        """Land all drones"""
+        for drone in self.drones:
+            drone.land()
 
-    controller.set_absolute_position_setpoint(drone_id, abs_pos)
+    def cmd_abs(self) -> None:
+        """
+        Set absolute position for a specific drone
+        In NEU (North, East, Up) coordinates
+        """
+        drone_id = self._get_drone_id()
+        target_x = float(input("Enter x position (m): ").strip())
+        target_y = float(input("Enter y position (m): ").strip())
+        target_z = float(input("Enter z position (m): ").strip())
+        target_yaw = math.radians(float(input("Enter target yaw (degrees): ").strip()))
+        abs_pos = np.array([target_x, target_y, target_z, target_yaw])
 
-def cmd_inc(controller: MultiDroneController) -> None:
-    """
-    Set incremental position for a specific drone
-    In NEU (North, East, Up) coordinates
-    """
-    drone_id = int(input("Enter drone ID: ").strip())
-    increment_x = float(input("Enter x position increment (m): ").strip())
-    increment_y = float(input("Enter y position increment (m): ").strip())
-    increment_z = float(input("Enter z position increment (m): ").strip())
-    increment_yaw = math.radians(float(input("Enter target yaw increment (degrees): ").strip()))
-    inc_pos = np.array([increment_x, increment_y, increment_z, increment_yaw])
+        self.drones[drone_id].set_absolute_position(abs_pos)
 
-    controller.set_incremental_position_setpoint(drone_id, inc_pos)
+    def cmd_inc(self) -> None:
+        """
+        Set incremental position for a specific drone
+        In NEU (North, East, Up) coordinates
+        """
+        drone_id = self._get_drone_id()
+        increment_x = float(input("Enter x position increment (m): ").strip())
+        increment_y = float(input("Enter y position increment (m): ").strip())
+        increment_z = float(input("Enter z position increment (m): ").strip())
+        increment_yaw = math.radians(float(input("Enter target yaw increment (degrees): ").strip()))
+        inc_pos = np.array([increment_x, increment_y, increment_z, increment_yaw])
 
-def cmd_circular_scan(controller: MultiDroneController) -> None:
-    # drone_id = int(input("Enter drone ID: ").strip())
-    drone_id = 0
+        self.drones[drone_id].set_incremental_position(inc_pos)
 
-    center_x = 0
-    center_y = 0
-    center_z = 2.5
-    radius = 2
-    yaw = math.pi/2
-    _step = math.radians(60)
-    _theta = math.radians(0)
+    def cmd_circular_scan(self) -> None:
+        drone_id = self._get_drone_id()
 
-    while _theta < 2*math.pi:
-        scan_pos = np.array([center_x + radius * np.cos(_theta), \
+        center_x = 0
+        center_y = 0
+        center_z = 2.5
+        radius = 2
+        yaw = math.pi/2
+        _step = math.radians(60)
+        _theta = math.radians(0)
+
+        while _theta < 2*math.pi:
+            scan_pos = np.array([
+                        center_x + radius * np.cos(_theta), \
                         center_y + radius * np.sin(_theta), \
+                        center_z, \
+                        _theta + yaw])
+            self.drones[drone_id].set_absolute_position(drone_id, scan_pos)
+            print(f"Set drone {drone_id} position to: {scan_pos}")
+            input("Press Enter to continue to next point...")
+            _theta += _step
+
+        _theta = math.radians(0)
+        scan_pos = np.array([
+                    center_x + radius * np.cos(_theta), \
+                    center_y + radius * np.sin(_theta), \
                     center_z, \
                     _theta + yaw])
-        controller.set_absolute_position_setpoint(drone_id, scan_pos)
-        print(f"Set drone {drone_id} position to: {scan_pos}")
-        input("Press Enter to continue to next point...")
-        _theta += _step
-    _theta = math.radians(0)
-    scan_pos = np.array([center_x + radius * np.cos(_theta), \
-                    center_y + radius * np.sin(_theta), \
-                center_z, \
-                _theta + yaw])
-    controller.set_absolute_position_setpoint(drone_id, scan_pos)
+        self.drones[drone_id].set_absolute_position(drone_id, scan_pos)
 
 def real_drone(args=None):
     rclpy.init(args=args)
@@ -155,16 +159,16 @@ def sim_two_drones(args=None):
         name = 'drone_1',
         prefix = '/px4_1',
         target_system = 2,
-        gazebo_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
-        is_gazebo = False
+        gazebo_pos = np.array([0.0, 3.0, 0.0, 0.0]),  # x, y, z, yaw
+        is_gazebo = True
     )
     drone_2 = OffboardControl(
         qos_profile = qos_profile,
         name = 'drone_2',
         prefix = '/px4_2',
         target_system = 3,
-        gazebo_pos = np.array([0.0, 3.0, 0.0, 0.0]),  # x, y, z, yaw
-        is_gazebo = False
+        gazebo_pos = np.array([0.0, -3.0, 0.0, 0.0]),  # x, y, z, yaw
+        is_gazebo = True
     )
     controller = MultiDroneController(is_gazebo=True, drones=[drone_1, drone_2])
 
@@ -172,12 +176,12 @@ def sim_two_drones(args=None):
 
 def main(controller: MultiDroneController) -> None:
     cmd_dict = {
-        'arm': cmd_arm,
-        'abs': cmd_abs,
-        'inc': cmd_inc,
-        'disarm': cmd_disarm,
-        'land': cmd_land,
-        'scan': cmd_circular_scan
+        'arm': controller.cmd_arm,
+        'abs': controller.cmd_abs,
+        'inc': controller.cmd_inc,
+        'disarm': controller.cmd_disarm,
+        'land': controller.cmd_land,
+        'scan': controller.cmd_circular_scan
     }
     
     print("=== Multi-Drone BLE Localization Controller ===")
@@ -200,8 +204,8 @@ def main(controller: MultiDroneController) -> None:
             if cmd not in cmd_dict:
                 print("Unknown command. Available commands: arm, abs, inc, disarm, land, quit")
                 continue
-            
-            cmd_dict[cmd](controller)
+
+            cmd_dict[cmd]()
         except ValueError as e:
             print(f"Input error: {e}")
         except Exception as e:
@@ -214,7 +218,19 @@ def main(controller: MultiDroneController) -> None:
 
 if __name__ == '__main__':
     try:
-        main()
+        rclpy.init(args=None)
+
+        drone_0 = OffboardControl(
+            qos_profile = qos_profile,
+            name = 'drone_1',
+            prefix = '/px4_1',
+            target_system = 2,
+            gazebo_pos = np.array([3.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
+            is_gazebo = True
+        )
+        controller = MultiDroneController(is_gazebo=True, drones=[drone_0])
+
+        main(controller)
     except Exception as e:
         print(e)
 
