@@ -24,8 +24,10 @@ setup(
     license='Apache License 2.0',
     entry_points={
         'console_scripts': [
-            'main = buav.main:main',
-            'sim = buav.main:sim'
+            'main = buav.main:real_drone',
+            'real = buav.main:real_drone',
+            'sim_one = buav.main:sim_one_drone',
+            'sim_two = buav.main:sim_two_drones',
         ],
     },
 )

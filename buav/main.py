@@ -117,21 +117,60 @@ def cmd_circular_scan(controller: MultiDroneController) -> None:
                 _theta + yaw])
     controller.set_absolute_position_setpoint(drone_id, scan_pos)
 
-
-def main(args=None) -> None:
+def real_drone(args=None):
     rclpy.init(args=args)
-
 
     drone_0 = OffboardControl(
         qos_profile = qos_profile,
         name = 'drone_0',
         prefix = '',
         target_system = 1,
+        gazebo_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
+        is_gazebo = False
+    )
+    controller = MultiDroneController(is_gazebo=True, drones=[drone_0])
+
+    main(controller)
+
+def sim_one_drone(args=None):
+    rclpy.init(args=args)
+
+    drone_0 = OffboardControl(
+        qos_profile = qos_profile,
+        name = 'drone_1',
+        prefix = '/px4_1',
+        target_system = 2,
         gazebo_pos = np.array([3.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
         is_gazebo = True
     )
     controller = MultiDroneController(is_gazebo=True, drones=[drone_0])
 
+    main(controller)
+
+def sim_two_drones(args=None):
+    rclpy.init(args=args)
+
+    drone_1 = OffboardControl(
+        qos_profile = qos_profile,
+        name = 'drone_1',
+        prefix = '/px4_1',
+        target_system = 2,
+        gazebo_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
+        is_gazebo = False
+    )
+    drone_2 = OffboardControl(
+        qos_profile = qos_profile,
+        name = 'drone_2',
+        prefix = '/px4_2',
+        target_system = 3,
+        gazebo_pos = np.array([0.0, 3.0, 0.0, 0.0]),  # x, y, z, yaw
+        is_gazebo = False
+    )
+    controller = MultiDroneController(is_gazebo=True, drones=[drone_1, drone_2])
+
+    main(controller)
+
+def main(controller: MultiDroneController) -> None:
     cmd_dict = {
         'arm': cmd_arm,
         'abs': cmd_abs,
@@ -173,71 +212,9 @@ def main(args=None) -> None:
     print("Shutting down...")
     shutdown_everything(controller)
 
-def sim(args=None) -> None:
-    rclpy.init(args=args)
-
-    drone_1 = OffboardControl(
-        qos_profile = qos_profile,
-        name = 'drone_1',
-        prefix = '/px4_1',
-        target_system = 2,
-        gazebo_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
-        is_gazebo = False
-    )
-    drone_2 = OffboardControl(
-        qos_profile = qos_profile,
-        name = 'drone_2',
-        prefix = '/px4_2',
-        target_system = 3,
-        gazebo_pos = np.array([0.0, 3.0, 0.0, 0.0]),  # x, y, z, yaw
-        is_gazebo = False
-    )
-    controller = MultiDroneController(is_gazebo=True, drones=[drone_1, drone_2])
-
-    cmd_dict = {
-        'arm': cmd_arm,
-        'abs': cmd_abs,
-        'inc': cmd_inc,
-        'disarm': cmd_disarm,
-        'land': cmd_land,
-    }
-    
-    print("=== Multi-Drone BLE Localization Controller ===")
-    print("Available commands:")
-    print("  arm  - Arm all drones")
-    print("  abs  - Set absolute position for a specific drone")
-    print("  inc  - Set incremental position for a specific drone")
-    print("  land - Land all drones")
-    print("  disarm - Disarm all drones")
-    print("  quit - Exit program")
-    print()
-
-    while rclpy.ok():
-        try:
-            cmd = input("Enter command: ").strip().lower()
-            
-            if cmd in ['quit', 'exit', 'q']:
-                break
-            
-            if cmd not in cmd_dict:
-                print("Unknown command. Available commands: arm, abs, inc, disarm, land, quit")
-                continue
-            
-            cmd_dict[cmd](controller)
-        except ValueError as e:
-            print(f"Input error: {e}")
-        except Exception as e:
-            print(f"Error executing command: {e}")
-        except:
-            break
-    
-    print("Shutting down...")
-    shutdown_everything(controller)
-
 if __name__ == '__main__':
     try:
         main()
-        # sim()
     except Exception as e:
         print(e)
 
