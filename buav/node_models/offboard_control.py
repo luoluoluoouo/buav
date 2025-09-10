@@ -15,36 +15,33 @@ from ..receiver.vehicle_command_ack import VehicleCommandAckReceiver, VehicleCom
 class OffboardControl(Node):
     """Node for controlling a vehicle in offboard mode."""
 
-    def __init__(self, qos_profile: QoSProfile, name: str, prefix: str, target_system: int, gazebo_pos: np.ndarray, is_gazebo = False) -> None:
+    def __init__(self, qos_profile: QoSProfile, name: str, prefix: str, target_system: int, gazebo_enu_pos: np.ndarray, is_gazebo = False) -> None:
         super().__init__(f'offboard_control_{name}')
 
         self.prefix = prefix
         self.target_system = target_system
 
-        self.gazebo_pos = self._ENU2NED(gazebo_pos)
-        self.x = self.gazebo_pos[0]
-        self.y = self.gazebo_pos[1]
-        self.z = self.gazebo_pos[2]
-        self.yaw = self.gazebo_pos[3]
+        self.gazebo_enu_pos = gazebo_enu_pos
+        self.gazebo_ned_pos = self._ENU2NED(gazebo_enu_pos)
+        self._target_x = self.gazebo_ned_pos[0]
+        self._target_y = self.gazebo_ned_pos[1]
+        self._target_z = self.gazebo_ned_pos[2]
+        self._target_yaw = self.gazebo_ned_pos[3]
         self.is_gazebo = is_gazebo
-
-        self._target_x = self.x
-        self._target_y = self.y
-        self._target_z = self.z
-        self._target_yaw = self.yaw
 
         self._offboard_control_mode_publisher = OffboardControlModePublisher(self, qos_profile, prefix)
         self._trajectory_setpoint_publisher = TrajectorySetpointPublisher(self, qos_profile, prefix)
         self._vehicle_command_publisher = VehicleCommandPublisher(self, qos_profile, prefix)
 
         self._vehicle_local_position_receiver = VehicleLocalPositionReceiver(self, qos_profile, prefix)
-        # self._vehicle_local_position_receiver.add_callback(self._vehicle_local_position_callback)
+        self._vehicle_local_position_receiver.add_callback(self._vehicle_local_position_callback)
         
         self._vehicle_status_receiver = VehicleStatusReceiver(self, qos_profile, prefix)
         self._vehicle_status_receiver.add_callback(self._vehicle_status_callback)
 
         self.offboard_setpoint_counter = 0
         self.vehicle_local_position = self._vehicle_local_position_receiver.get_simple_msg()
+        self.vehicle_local_enu_pos = np.array([0.0, 0.0, 0.0, 0.0])
         self.vehicle_status = self._vehicle_status_receiver.get_simple_msg()
 
         self.timer = self.create_timer(0.1, self._timer_callback)
@@ -162,10 +159,10 @@ class OffboardControl(Node):
         self.get_logger().info(f'Drone has set to x: {pos[0]}, y: {pos[1]}, z: {pos[2]}, yaw: {math.degrees(pos[3])}')
 
     def get_position(self):
-        self.abs_x = self.gazebo_pos[0] + self.vehicle_local_position.y
-        self.abs_y = self.gazebo_pos[1] + self.vehicle_local_position.x
-        self.abs_z = self.gazebo_pos[2] - self.vehicle_local_position.z
-    
+        self.abs_x = self.gazebo_enu_pos[0] + self.vehicle_local_enu_pos[0]
+        self.abs_y = self.gazebo_enu_pos[1] + self.vehicle_local_enu_pos[1]
+        self.abs_z = self.gazebo_enu_pos[2] + self.vehicle_local_enu_pos[2]
+
         return (self.abs_x, self.abs_y, self.abs_z)
 
     def is_armed(self) -> bool:
@@ -173,12 +170,14 @@ class OffboardControl(Node):
     
     def _vehicle_local_position_callback(self, msg: VehicleLocalPositionMsg) -> None:
         self.vehicle_local_position = msg
-        self.x = self.vehicle_local_position.x
-        self.y = self.vehicle_local_position.y
-        self.z = self.vehicle_local_position.z
-        
-        if self.flying:
-            print(msg.x, msg.y, msg.z)
+        vehicle_local_ned_pos = np.array([
+            self.vehicle_local_position.x,
+            self.vehicle_local_position.y,
+            self.vehicle_local_position.z,
+            -1
+        ])
+
+        self.vehicle_local_enu_pos = self._NED2ENU(vehicle_local_ned_pos)
 
     def _vehicle_status_callback(self, msg: VehicleStatusMsg) -> None:
         self.vehicle_status = msg
@@ -198,10 +197,10 @@ class OffboardControl(Node):
 
             if self.is_gazebo:
                 self._trajectory_setpoint_publisher.publish(
-                    position=(self._target_x - self.gazebo_pos[0],
-                              self._target_y - self.gazebo_pos[1],
-                              self._target_z - self.gazebo_pos[2]),
-                    yaw=self._target_yaw - self.gazebo_pos[3]
+                    position=(self._target_x - self.gazebo_ned_pos[0],
+                              self._target_y - self.gazebo_ned_pos[1],
+                              self._target_z - self.gazebo_ned_pos[2]),
+                    yaw=self._target_yaw - self.gazebo_ned_pos[3]
                 )
             else:
                 self._trajectory_setpoint_publisher.publish(

@@ -91,6 +91,11 @@ class MultiDroneController():
 
         self.drones[drone_id].set_incremental_position(inc_pos)
 
+    def cmd_get_position(self) -> None:
+        drone_id = self._get_drone_id()
+        pos = self.drones[drone_id].get_position()
+        print(f"Drone {drone_id} position: x={pos[0]}, y={pos[1]}, z={pos[2]}")
+
     def cmd_circular_scan(self) -> None:
         drone_id = self._get_drone_id()
 
@@ -129,7 +134,7 @@ def real_drone(args=None):
         name = 'drone_0',
         prefix = '',
         target_system = 1,
-        gazebo_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
+        gazebo_enu_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
         is_gazebo = False
     )
     controller = MultiDroneController(is_gazebo=True, drones=[drone_0])
@@ -144,7 +149,7 @@ def sim_one_drone(args=None):
         name = 'drone_1',
         prefix = '/px4_1',
         target_system = 2,
-        gazebo_pos = np.array([3.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
+        gazebo_enu_pos = np.array([3.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
         is_gazebo = True
     )
     controller = MultiDroneController(is_gazebo=True, drones=[drone_0])
@@ -159,7 +164,7 @@ def sim_two_drones(args=None):
         name = 'drone_1',
         prefix = '/px4_1',
         target_system = 2,
-        gazebo_pos = np.array([0.0, 3.0, 0.0, 0.0]),  # x, y, z, yaw
+        gazebo_enu_pos = np.array([0.0, 3.0, 0.0, 0.0]),  # x, y, z, yaw
         is_gazebo = True
     )
     drone_2 = OffboardControl(
@@ -167,7 +172,7 @@ def sim_two_drones(args=None):
         name = 'drone_2',
         prefix = '/px4_2',
         target_system = 3,
-        gazebo_pos = np.array([0.0, -3.0, 0.0, 0.0]),  # x, y, z, yaw
+        gazebo_enu_pos = np.array([0.0, -3.0, 0.0, 0.0]),  # x, y, z, yaw
         is_gazebo = True
     )
     controller = MultiDroneController(is_gazebo=True, drones=[drone_1, drone_2])
@@ -181,6 +186,7 @@ def main(controller: MultiDroneController) -> None:
         'inc': controller.cmd_inc,
         'disarm': controller.cmd_disarm,
         'land': controller.cmd_land,
+        'pos': controller.cmd_get_position,
         'scan': controller.cmd_circular_scan
     }
     
@@ -190,6 +196,7 @@ def main(controller: MultiDroneController) -> None:
     print("  abs  - Set absolute position for a specific drone")
     print("  inc  - Set incremental position for a specific drone")
     print("  land - Land all drones")
+    print("  pos  - Get current position of a specific drone")
     print("  disarm - Disarm all drones")
     print("  quit - Exit program")
     print()
