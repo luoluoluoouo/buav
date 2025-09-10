@@ -164,7 +164,7 @@ def sim_two_drones(args=None):
         name = 'drone_1',
         prefix = '/px4_1',
         target_system = 2,
-        gazebo_enu_pos = np.array([0.0, 3.0, 0.0, 0.0]),  # x, y, z, yaw
+        gazebo_enu_pos = np.array([0.0, -3.0, 0.0, 0.0]),  # x, y, z, yaw
         is_gazebo = True
     )
     drone_2 = OffboardControl(
@@ -172,7 +172,7 @@ def sim_two_drones(args=None):
         name = 'drone_2',
         prefix = '/px4_2',
         target_system = 3,
-        gazebo_enu_pos = np.array([0.0, -3.0, 0.0, 0.0]),  # x, y, z, yaw
+        gazebo_enu_pos = np.array([0.0, 3.0, 0.0, 0.0]),  # x, y, z, yaw
         is_gazebo = True
     )
     controller = MultiDroneController(is_gazebo=True, drones=[drone_1, drone_2])
