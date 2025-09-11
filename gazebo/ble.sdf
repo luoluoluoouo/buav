@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version='1.0' encoding='utf-8'?>
 <sdf version="1.7">
   <world name="default">
 
@@ -9,7 +9,7 @@
     </physics>
     <gravity>0 0 -9.8</gravity>
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
-    <atmosphere type="adiabatic"/>
+    <atmosphere type="adiabatic" />
     <scene>
       <grid>false</grid>
       <ambient>0.4 0.4 0.4 1</ambient>
@@ -18,14 +18,15 @@
     </scene>
 
     <light name="sunUTC" type="directional">
-      <pose>0 0 10 0 0 0</pose>
+      <pose>0 0 100 0 0 0</pose>
       <diffuse>0.8 0.8 0.8 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
-      <direction>-0.5 0.5 -1</direction>
+      <direction>0 0 -1</direction>
       <cast_shadows>true</cast_shadows>
     </light>
 
-    <!-- same geographic settings as default.sdf -->
+
+    
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
       <world_frame_orientation>ENU</world_frame_orientation>
@@ -61,166 +62,194 @@
       </link>
     </model>
 
-    <!-- Walls -->
-    <model name="wall_north"><static>true</static><pose>0 12 1.5 0 0 0</pose>
+    
+    <model name="wall_north"><static>true</static><pose>0 12 2.5 0 0 0</pose>
       <link name="wall">
-        <collision name="c"><geometry><box><size>24 0.2 3</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>24 0.2 3</size></box></geometry>
-          <material><ambient>0.6 0.6 0.64 1</ambient><diffuse>0.6 0.6 0.64 1</diffuse></material>
-        </visual>
+      <collision name="c"><geometry><box><size>24 0.2 5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>24 0.2 5</size></box></geometry>
+        <material><ambient>0.6 0.6 0.64 1</ambient><diffuse>0.6 0.6 0.64 1</diffuse></material>
+      </visual>
       </link>
     </model>
-    <model name="wall_south"><static>true</static><pose>0 -12 1.5 0 0 0</pose>
+    <model name="wall_south"><static>true</static><pose>0 -12 2.5 0 0 0</pose>
       <link name="wall">
-        <collision name="c"><geometry><box><size>24 0.2 3</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>24 0.2 3</size></box></geometry>
-          <material><ambient>0.6 0.6 0.64 1</ambient><diffuse>0.6 0.6 0.64 1</diffuse></material>
-        </visual>
+      <collision name="c"><geometry><box><size>24 0.2 5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>24 0.2 5</size></box></geometry>
+        <material><ambient>0.6 0.6 0.64 1</ambient><diffuse>0.6 0.6 0.64 1</diffuse></material>
+      </visual>
       </link>
     </model>
-    <model name="wall_east"><static>true</static><pose>12 0 1.5 0 0 1.5708</pose>
+    <model name="wall_east"><static>true</static><pose>12 0 2.5 0 0 1.5708</pose>
       <link name="wall">
-        <collision name="c"><geometry><box><size>24 0.2 3</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>24 0.2 3</size></box></geometry>
-          <material><ambient>0.6 0.6 0.64 1</ambient><diffuse>0.6 0.6 0.64 1</diffuse></material>
-        </visual>
+      <collision name="c"><geometry><box><size>24 0.2 5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>24 0.2 5</size></box></geometry>
+        <material><ambient>0.6 0.6 0.64 1</ambient><diffuse>0.6 0.6 0.64 1</diffuse></material>
+      </visual>
       </link>
     </model>
-    <model name="wall_west"><static>true</static><pose>-12 0 1.5 0 0 1.5708</pose>
+    <model name="wall_west"><static>true</static><pose>-12 0 2.5 0 0 1.5708</pose>
       <link name="wall">
-        <collision name="c"><geometry><box><size>24 0.2 3</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>24 0.2 3</size></box></geometry>
-          <material><ambient>0.6 0.6 0.64 1</ambient><diffuse>0.6 0.6 0.64 1</diffuse></material>
-        </visual>
+      <collision name="c"><geometry><box><size>24 0.2 5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>24 0.2 5</size></box></geometry>
+        <material><ambient>0.6 0.6 0.64 1</ambient><diffuse>0.6 0.6 0.64 1</diffuse></material>
+      </visual>
       </link>
     </model>
 
-    <!-- BLE beacons (XY unchanged) -->
-    <model name="ble_beacon_1"><static>true</static><pose>5 5 0.05 0 0 0</pose>
+    
+    <model name="ble_beacon_1"><static>true</static><pose>0 8.66 0.25 0 0 0</pose>
       <link name="link">
-        <collision name="c"><geometry><box><size>0.1 0.1 0.1</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.1 0.1 0.1</size></box></geometry>
-          <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
-        </visual>
+      <collision name="c"><geometry><box><size>0.5 0.5 0.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+      <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
+      </visual>
       </link>
     </model>
-    <model name="ble_beacon_2"><static>true</static><pose>5 -5 0.05 0 0 0</pose>
+    <model name="ble_beacon_2"><static>true</static><pose>-7.5 -4.33 0.25 0 0 0</pose>
       <link name="link">
-        <collision name="c"><geometry><box><size>0.1 0.1 0.1</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.1 0.1 0.1</size></box></geometry>
-          <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
-        </visual>
+      <collision name="c"><geometry><box><size>0.5 0.5 0.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+      <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
+      </visual>
       </link>
     </model>
-    <model name="ble_beacon_3"><static>true</static><pose>-5 5 0.05 0 0 0</pose>
+    <model name="ble_beacon_3"><static>true</static><pose>7.5 -4.33 0.25 0 0 0</pose>
       <link name="link">
-        <collision name="c"><geometry><box><size>0.1 0.1 0.1</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.1 0.1 0.1</size></box></geometry>
-          <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
-        </visual>
-      </link>
-    </model>
-    <model name="ble_beacon_4"><static>true</static><pose>-5 -5 0.05 0 0 0</pose>
-      <link name="link">
-        <collision name="c"><geometry><box><size>0.1 0.1 0.1</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.1 0.1 0.1</size></box></geometry>
-          <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
-        </visual>
+      <collision name="c"><geometry><box><size>0.5 0.5 0.5</size></box></geometry></collision>
+      <visual name="v"><geometry><box><size>0.5 0.5 0.5</size></box></geometry>
+      <material><ambient>0 0 1 1</ambient><diffuse>0 0 1 1</diffuse></material>
+      </visual>
       </link>
     </model>
 
-    <!-- Central scan target: professional registration objects -->
-    <model name="scan_target_station">
+    
+    <model name="roman_column">
       <static>true</static>
       <pose>0 0 0 0 0 0</pose>
-      <link name="base">
-
-        <!-- Pallet (centered) -->
-        <collision name="pallet_collision"><pose>0 0 0.072 0 0 0</pose>
-          <geometry><box><size>1.2 0.8 0.144</size></box></geometry>
-        </collision>
-        <visual name="pallet_visual"><pose>0 0 0.072 0 0 0</pose>
-          <geometry><box><size>1.2 0.8 0.144</size></box></geometry>
-          <material>
-            <ambient>0.5 0.35 0.2 1</ambient><diffuse>0.6 0.42 0.25 1</diffuse>
-            <pbr><metal><roughness>0.9</roughness><metalness>0.0</metalness></metal></pbr>
-          </material>
-        </visual>
-
-        <!-- Instrument crate -->
-        <collision name="crate_collision"><pose>0 0 0.544 0 0 0</pose>
-          <geometry><box><size>0.8 0.6 0.8</size></box></geometry>
-        </collision>
-        <visual name="crate_visual"><pose>0 0 0.544 0 0 0</pose>
-          <geometry><box><size>0.8 0.6 0.8</size></box></geometry>
-          <material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
-        </visual>
-
-        <!-- Survey column (H=5.0 m) -->
-        <collision name="column_collision"><pose>0 0 2.644 0 0 0</pose>
-          <geometry><cylinder><radius>0.12</radius><length>5.0</length></cylinder></geometry>
-        </collision>
-        <visual name="column_visual"><pose>0 0 2.644 0 0 0</pose>
-          <geometry><cylinder><radius>0.12</radius><length>5.0</length></cylinder></geometry>
-          <material>
-            <ambient>0.2 0.2 0.2 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse>
-            <pbr><metal><roughness>0.3</roughness><metalness>0.8</metalness></metal></pbr>
-          </material>
-        </visual>
-
-        <!-- Side vertical rail to mount targets (aligned with column) -->
-        <visual name="side_rail"><pose>0.8 0 2.644 0 0 0</pose>
-          <geometry><box><size>0.05 0.1 5.0</size></box></geometry>
-          <material><ambient>0.15 0.15 0.15 1</ambient><diffuse>0.3 0.3 0.3 1</diffuse></material>
-        </visual>
-
-        <!-- Registration spheres (Ø0.3m) aligned along the rail -->
-        <collision name="sphere_low_c"><pose>0.8 0 1.2 0 0 0</pose>
-          <geometry><sphere><radius>0.15</radius></sphere></geometry>
-        </collision>
-        <visual name="sphere_low_v"><pose>0.8 0 1.2 0 0 0</pose>
-          <geometry><sphere><radius>0.15</radius></sphere></geometry>
-          <material><ambient>0.95 0.95 0.95 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
-        </visual>
-
-        <collision name="sphere_mid_c"><pose>0.8 0 3.0 0 0 0</pose>
-          <geometry><sphere><radius>0.15</radius></sphere></geometry>
-        </collision>
-        <visual name="sphere_mid_v"><pose>0.8 0 3.0 0 0 0</pose>
-          <geometry><sphere><radius>0.15</radius></sphere></geometry>
-          <material><ambient>0.95 0.95 0.95 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
-        </visual>
-
-        <collision name="sphere_high_c"><pose>0.8 0 4.5 0 0 0</pose>
-          <geometry><sphere><radius>0.15</radius></sphere></geometry>
-        </collision>
-        <visual name="sphere_high_v"><pose>0.8 0 4.5 0 0 0</pose>
-          <geometry><sphere><radius>0.15</radius></sphere></geometry>
-          <material><ambient>0.95 0.95 0.95 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
-        </visual>
-
-        <!-- Horizontal scale bar (1.0 m) at z = 1.2 m -->
-        <visual name="scale_bar"><pose>0 0 1.2 0 1.5708 0</pose>
-          <geometry><cylinder><radius>0.015</radius><length>1.0</length></cylinder></geometry>
-          <material><ambient>0.2 0.2 0.2 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
-        </visual>
-        <!-- Spheres at the ends of the scale bar -->
-        <visual name="scale_sphere_left"><pose>-0.5 0 1.2 0 0 0</pose>
-          <geometry><sphere><radius>0.06</radius></sphere></geometry>
-          <material><ambient>1 0.2 0.2 1</ambient><diffuse>1 0.2 0.2 1</diffuse></material>
-        </visual>
-        <visual name="scale_sphere_right"><pose>0.5 0 1.2 0 0 0</pose>
-          <geometry><sphere><radius>0.06</radius></sphere></geometry>
-          <material><ambient>0.2 0.2 1 1</ambient><diffuse>0.2 0.2 1 1</diffuse></material>
-        </visual>
-
-        <!-- Top cap -->
-        <visual name="column_cap"><pose>0 0 5.164 0 0 0</pose>
-          <geometry><cylinder><radius>0.15</radius><length>0.04</length></cylinder></geometry>
-          <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
-        </visual>
+      <link name="column">
+      <collision name="column_collision">
+      <pose>0 0 2.5 0 0 0</pose>
+      <geometry>
+      <cylinder>
+        <radius>0.45</radius>
+        <length>5.0</length>
+      </cylinder>
+      </geometry>
+      </collision>
+      <visual name="plinth">
+      <pose>0 0 0.1 0 0 0</pose>
+      <geometry>
+      <box>
+        <size>1.2 1.2 0.2</size>
+      </box>
+      </geometry>
+      <material>
+      <ambient>0.3 0.3 0.3 1.0</ambient>
+      <diffuse>0.3 0.3 0.3 1.0</diffuse>
+      <pbr>
+        <metal>
+        <roughness>0.8</roughness>
+        <metalness>0.0</metalness>
+        </metal>
+      </pbr>
+      </material>
+      </visual>
+      <visual name="base_round">
+      <pose>0 0 0.25 0 0 0</pose>
+      <geometry>
+      <cylinder>
+        <radius>0.55</radius>
+        <length>0.1</length>
+      </cylinder>
+      </geometry>
+      <material>
+      <ambient>0.3 0.3 0.3 1.0</ambient>
+      <diffuse>0.3 0.3 0.3 1.0</diffuse>
+      <pbr>
+        <metal>
+        <roughness>0.8</roughness>
+        <metalness>0.0</metalness>
+        </metal>
+      </pbr>
+      </material>
+      </visual>
+      <visual name="shaft_lower">
+      <pose>0 0 1.5 0 0 0</pose>
+      <geometry>
+      <cylinder>
+        <radius>0.42</radius>
+        <length>2.4</length>
+      </cylinder>
+      </geometry>
+      <material>
+      <ambient>0.3 0.3 0.3 1.0</ambient>
+      <diffuse>0.3 0.3 0.3 1.0</diffuse>
+      <pbr>
+        <metal>
+        <roughness>0.8</roughness>
+        <metalness>0.0</metalness>
+        </metal>
+      </pbr>
+      </material>
+      </visual>
+      <visual name="shaft_upper">
+      <pose>0 0 3.7 0 0 0</pose>
+      <geometry>
+      <cylinder>
+        <radius>0.38</radius>
+        <length>2.0</length>
+      </cylinder>
+      </geometry>
+      <material>
+      <ambient>0.3 0.3 0.3 1.0</ambient>
+      <diffuse>0.3 0.3 0.3 1.0</diffuse>
+      <pbr>
+        <metal>
+        <roughness>0.8</roughness>
+        <metalness>0.0</metalness>
+        </metal>
+      </pbr>
+      </material>
+      </visual>
+      <visual name="capital_round">
+      <pose>0 0 4.8 0 0 0</pose>
+      <geometry>
+      <cylinder>
+        <radius>0.55</radius>
+        <length>0.2</length>
+      </cylinder>
+      </geometry>
+      <material>
+      <ambient>0.3 0.3 0.3 1.0</ambient>
+      <diffuse>0.3 0.3 0.3 1.0</diffuse>
+      <pbr>
+        <metal>
+        <roughness>0.8</roughness>
+        <metalness>0.0</metalness>
+        </metal>
+      </pbr>
+      </material>
+      </visual>
+      <visual name="abacus">
+      <pose>0 0 4.95 0 0 0</pose>
+      <geometry>
+      <box>
+        <size>1.0 1.0 0.1</size>
+      </box>
+      </geometry>
+      <material>
+      <ambient>0.3 0.3 0.3 1.0</ambient>
+      <diffuse>0.3 0.3 0.3 1.0</diffuse>
+      <pbr>
+        <metal>
+        <roughness>0.8</roughness>
+        <metalness>0.0</metalness>
+        </metal>
+      </pbr>
+      </material>
+      </visual>
       </link>
     </model>
 
-  </world>
+    </world>
 </sdf>
