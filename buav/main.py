@@ -113,7 +113,9 @@ class MultiDroneController():
             scan_y = center_y + radius * math.sin(angle)
             
             # Yaw towards center of circle
-            yaw_towards_center = angle + math.pi
+            yaw_towards_center = angle + math.pi/2
+            # Yaw towards foward direction
+            # yaw_towards_center = angle
             
             scan_pos = np.array([scan_x, scan_y, center_z, yaw_towards_center])
             self.drones[drone_id].set_absolute_position(scan_pos)
