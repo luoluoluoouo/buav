@@ -103,28 +103,25 @@ class MultiDroneController():
         center_y = 0
         center_z = 2.5
         radius = 2
-        yaw = math.pi/2
-        _step = math.radians(60)
-        _theta = math.radians(0)
-
-        while _theta < 2*math.pi:
-            scan_pos = np.array([
-                        center_x + radius * np.cos(_theta), \
-                        center_y + radius * np.sin(_theta), \
-                        center_z, \
-                        _theta + yaw])
-            self.drones[drone_id].set_absolute_position(drone_id, scan_pos)
-            print(f"Set drone {drone_id} position to: {scan_pos}")
-            input("Press Enter to continue to next point...")
-            _theta += _step
-
-        _theta = math.radians(0)
-        scan_pos = np.array([
-                    center_x + radius * np.cos(_theta), \
-                    center_y + radius * np.sin(_theta), \
-                    center_z, \
-                    _theta + yaw])
-        self.drones[drone_id].set_absolute_position(drone_id, scan_pos)
+        num_points = 6  # Number of scan points around the circle
+        
+        for i in range(num_points + 1):  # +1 to return to starting point
+            angle = (2 * math.pi * i) / num_points
+            
+            # Calculate position on circle
+            scan_x = center_x + radius * math.cos(angle)
+            scan_y = center_y + radius * math.sin(angle)
+            
+            # Yaw towards center of circle
+            yaw_towards_center = angle + math.pi
+            
+            scan_pos = np.array([scan_x, scan_y, center_z, yaw_towards_center])
+            self.drones[drone_id].set_absolute_position(scan_pos)
+            
+            print(f"Point {i}: Set drone {drone_id} to position: x={scan_x:.2f}, y={scan_y:.2f}, z={center_z:.2f}, yaw={math.degrees(yaw_towards_center):.1f}°")
+            
+            if i < num_points:  # Don't wait after the last point
+                input("Press Enter to continue to next point...")
 
 def real_drone(args=None):
     rclpy.init(args=args)
