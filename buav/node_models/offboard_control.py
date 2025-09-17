@@ -108,9 +108,10 @@ class OffboardControl(Node):
         if abs(pos[0]) > 5.0 or abs(pos[1]) > 5.0:
             print("Target X and Y positions must be within -5.0 to 5.0 meters.")
             raise ValueError("Target X and Y positions must be within -5.0 to 5.0 meters.")
-        if abs(pos[3]) > 2*math.pi:
-            print("Target yaw must be between -360 and 360 degrees.")
-            raise ValueError("Target yaw must be between -360 and 360 degrees.")
+        if pos[3] > 2*math.pi:
+            pos[3] = pos[3] % (2*math.pi)
+        if pos[3] < -2*math.pi:
+            pos[3] = pos[3] % (-2*math.pi)
         
         return True
 
