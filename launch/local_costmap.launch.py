@@ -13,7 +13,7 @@ def generate_launch_description():
             executable='nav2_costmap_2d',   # ← 用這個
             name='local_costmap',
             output='screen',
-            parameters=[params],
+            parameters=[params, {'use_sim_time': True}],
         ),
         Node(
             package='nav2_lifecycle_manager',
@@ -26,10 +26,5 @@ def generate_launch_description():
                 'node_names': ['/costmap/costmap'],
                 'bond_timeout': 0.0
             }],
-        ),
-        Node(
-            package="tf2_ros",
-            executable="static_transform_publisher",
-            arguments=["0", "0", "0", "0", "0", "0", "map", "odom"]
         ),
     ])

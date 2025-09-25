@@ -52,11 +52,21 @@ def generate_launch_description():
             remappings=[("/depth_camera/points", "/camera/points")],
             output="screen"
         ),
-        # Static TF
         Node(
             package="tf2_ros",
             executable="static_transform_publisher",
-            arguments=["0", "0", "0", "0", "0", "0", "map", [drone_name, "/camera_link/StereoOV7251"]]
+            arguments=["0", "0", "0", "0", "0", "0", "map", "odom"]
+        ),
+        Node(
+            package="buav",
+            executable="vehicle_odom_bridge",
+            name="vehicle_odom_bridge",
+            output="screen"
+        ),
+        Node(
+            package="tf2_ros",
+            executable="static_transform_publisher",
+            arguments=["0", "0", "0", "0", "0", "0", "base_link", [drone_name, "/camera_link/StereoOV7251"]]
         ),
         # RViz2
         Node(
