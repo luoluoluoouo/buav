@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import math
 from more_itertools import one
-import numpy as np
 
 from threading import Thread
 
@@ -73,7 +72,7 @@ class MultiDroneController():
         target_y = float(input("Enter y position (m): ").strip())
         target_z = float(input("Enter z position (m): ").strip())
         target_yaw = math.radians(float(input("Enter target yaw (degrees): ").strip()))
-        abs_pos = np.array([target_x, target_y, target_z, target_yaw])
+        abs_pos = [target_x, target_y, target_z, target_yaw]
 
         self.drones[drone_id].set_absolute_position(abs_pos)
 
@@ -87,7 +86,7 @@ class MultiDroneController():
         increment_y = float(input("Enter y position increment (m): ").strip())
         increment_z = float(input("Enter z position increment (m): ").strip())
         increment_yaw = math.radians(float(input("Enter target yaw increment (degrees): ").strip()))
-        inc_pos = np.array([increment_x, increment_y, increment_z, increment_yaw])
+        inc_pos = [increment_x, increment_y, increment_z, increment_yaw]
 
         self.drones[drone_id].set_incremental_position(inc_pos)
 
@@ -117,7 +116,7 @@ class MultiDroneController():
             # Yaw towards foward direction
             # yaw_towards_center = angle
             
-            scan_pos = np.array([scan_x, scan_y, center_z, yaw_towards_center])
+            scan_pos = [scan_x, scan_y, center_z, yaw_towards_center]
             self.drones[drone_id].set_absolute_position(scan_pos)
             
             print(f"Point {i}: Set drone {drone_id} to position: x={scan_x:.2f}, y={scan_y:.2f}, z={center_z:.2f}, yaw={math.degrees(yaw_towards_center):.1f}°")
@@ -133,8 +132,9 @@ def real_drone(args=None):
         name = 'drone_0',
         prefix = '',
         target_system = 1,
-        gazebo_enu_pos = np.array([0.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
-        is_gazebo = False
+        gazebo_enu_pos = [0.0, 0.0, 0.0, 0.0],  # x, y, z, yaw
+        is_gazebo = False,
+        scale = 0.5
     )
     controller = MultiDroneController(is_gazebo=True, drones=[drone_0])
 
@@ -148,8 +148,9 @@ def sim_one_drone(args=None):
         name = 'drone_1',
         prefix = '/px4_1',
         target_system = 2,
-        gazebo_enu_pos = np.array([3.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
-        is_gazebo = True
+        is_gazebo = True,
+        gazebo_enu_pos = [3.0, 0.0, 0.0, 0.0],  # x, y, z, yaw
+        scale = 1.0
     )
     controller = MultiDroneController(is_gazebo=True, drones=[drone_0])
 
@@ -163,16 +164,18 @@ def sim_two_drones(args=None):
         name = 'drone_1',
         prefix = '/px4_1',
         target_system = 2,
-        gazebo_enu_pos = np.array([0.0, -3.0, 0.0, 0.0]),  # x, y, z, yaw
-        is_gazebo = True
+        is_gazebo = True,
+        gazebo_enu_pos = [0.0, -3.0, 0.0, 0.0],  # x, y, z, yaw
+        scale = 1.0
     )
     drone_2 = OffboardControl(
         qos_profile = qos_profile,
         name = 'drone_2',
         prefix = '/px4_2',
         target_system = 3,
-        gazebo_enu_pos = np.array([0.0, 3.0, 0.0, 0.0]),  # x, y, z, yaw
-        is_gazebo = True
+        is_gazebo = True,
+        gazebo_enu_pos = [0.0, 3.0, 0.0, 0.0],  # x, y, z, yaw
+        scale = 1.0
     )
     controller = MultiDroneController(is_gazebo=True, drones=[drone_1, drone_2])
 
@@ -225,18 +228,6 @@ def main(controller: MultiDroneController) -> None:
 if __name__ == '__main__':
     try:
         rclpy.init(args=None)
-
-        drone_0 = OffboardControl(
-            qos_profile = qos_profile,
-            name = 'drone_1',
-            prefix = '/px4_1',
-            target_system = 2,
-            gazebo_pos = np.array([3.0, 0.0, 0.0, 0.0]),  # x, y, z, yaw
-            is_gazebo = True
-        )
-        controller = MultiDroneController(is_gazebo=True, drones=[drone_0])
-
-        main(controller)
     except Exception as e:
         print(e)
 

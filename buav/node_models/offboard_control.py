@@ -1,5 +1,4 @@
 import math
-import numpy as np
 
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -15,19 +14,35 @@ from ..receiver.vehicle_command_ack import VehicleCommandAckReceiver, VehicleCom
 class OffboardControl(Node):
     """Node for controlling a vehicle in offboard mode."""
 
-    def __init__(self, qos_profile: QoSProfile, name: str, prefix: str, target_system: int, gazebo_enu_pos: np.ndarray, is_gazebo = False) -> None:
+    def __init__(self, qos_profile: QoSProfile, \
+                       name: str, 
+                       prefix: str, 
+                       target_system: int, 
+                       is_gazebo = False,
+                       gazebo_enu_pos: list = None,
+                       scale: float = 1.0
+                       ) -> None:
         super().__init__(f'offboard_control_{name}')
 
         self.prefix = prefix
         self.target_system = target_system
 
-        self.gazebo_enu_pos = gazebo_enu_pos
-        self.gazebo_ned_pos = self._ENU2NED(gazebo_enu_pos)
-        self._target_x = self.gazebo_ned_pos[0]
-        self._target_y = self.gazebo_ned_pos[1]
-        self._target_z = self.gazebo_ned_pos[2]
-        self._target_yaw = self.gazebo_ned_pos[3]
         self.is_gazebo = is_gazebo
+        if is_gazebo:
+            self.gazebo_enu_pos = gazebo_enu_pos
+            self.gazebo_ned_pos = self._ENU2NED(gazebo_enu_pos)
+            self._target_x = self.gazebo_ned_pos[0]
+            self._target_y = self.gazebo_ned_pos[1]
+            self._target_z = self.gazebo_ned_pos[2]
+            self._target_yaw = self.gazebo_ned_pos[3]
+        else:
+            self.gazebo_enu_pos = [0.0, 0.0, 0.0, 0.0]
+            self.gazebo_ned_pos = [0.0, 0.0, 0.0, 0.0]
+            self._target_x = 0.0
+            self._target_y = 0.0
+            self._target_z = 0.0
+            self._target_yaw = 0.0
+        self.scale = scale
 
         self._offboard_control_mode_publisher = OffboardControlModePublisher(self, qos_profile, prefix)
         self._trajectory_setpoint_publisher = TrajectorySetpointPublisher(self, qos_profile, prefix)
@@ -41,7 +56,7 @@ class OffboardControl(Node):
 
         self.offboard_setpoint_counter = 0
         self.vehicle_local_position = self._vehicle_local_position_receiver.get_simple_msg()
-        self.vehicle_local_enu_pos = np.array([0.0, 0.0, 0.0, 0.0])
+        self.vehicle_local_enu_pos = [0.0, 0.0, 0.0, 0.0]
         self.vehicle_status = self._vehicle_status_receiver.get_simple_msg()
 
         self.timer = self.create_timer(0.1, self._timer_callback)
@@ -80,45 +95,45 @@ class OffboardControl(Node):
         
         self.flying = False
 
-    def _ENU2NED(self, ENU_pos: np.ndarray) -> np.ndarray:
+    def _ENU2NED(self, ENU_pos: list) -> list:
         """
         Convert ENU (East, North, Up) coordinates to NED (North, East, Down) coordinates.
-        Input is a numpy array of shape (4,) representing (East, North, Up, Yaw) in ENU frame.
-        Output is a numpy array of shape (4,) representing (North, East, Down, Yaw) in NED frame.
+        Input is a list of shape (4,) representing (East, North, Up, Yaw) in ENU frame.
+        Output is a list of shape (4,) representing (North, East, Down, Yaw) in NED frame.
         """
-        NED_pos = np.array([ENU_pos[1], ENU_pos[0], -ENU_pos[2], -ENU_pos[3]], dtype=float)
+        NED_pos = [ENU_pos[1], ENU_pos[0], -ENU_pos[2], -ENU_pos[3]]
         return NED_pos
 
-    def _NED2ENU(self, NED_pos: np.ndarray) -> np.ndarray:
+    def _NED2ENU(self, NED_pos: list) -> list:
         """
         Convert NED (North, East, Down) coordinates to ENU (East, North, Up) coordinates.
-        Input is a numpy array of shape (4,) representing (North, East, Down, Yaw) in NED frame.
-        Output is a numpy array of shape (4,) representing (East, North, Up, Yaw) in ENU frame.
+        Input is a list of shape (4,) representing (North, East, Down, Yaw) in NED frame.
+        Output is a list of shape (4,) representing (East, North, Up, Yaw) in ENU frame.
         """
-        ENU_pos = np.array([NED_pos[1], NED_pos[0], -NED_pos[2], -NED_pos[3]], dtype=float)
+        ENU_pos = [NED_pos[1], NED_pos[0], -NED_pos[2], -NED_pos[3]]
         return ENU_pos
 
-    def _ENU_pos_check(self, pos: np.ndarray) -> bool:
+    def _ENU_pos_check(self, enu_pos: list) -> bool:
         """
         Check if the given ENU position is valid.
         """
-        if pos[2] < 2.0 or pos[2] > 6.0:
-            print("Target Z position must be between 2.0 and 6.0 meters above the ground.")
-            raise ValueError("Target Z position must be between 2.0 and 6.0 meters above the ground.")
-        if abs(pos[0]) > 5.0 or abs(pos[1]) > 5.0:
+        if enu_pos[2] < 2.0 or enu_pos[2] > 5.0:
+            print("Target Z position must be between 2.0 and 5.0 meters above the ground.")
+            raise ValueError("Target Z position must be between 2.0 and 5.0 meters above the ground.")
+        if abs(enu_pos[0]) > 5.0 or abs(enu_pos[1]) > 5.0:
             print("Target X and Y positions must be within -5.0 to 5.0 meters.")
             raise ValueError("Target X and Y positions must be within -5.0 to 5.0 meters.")
-        if pos[3] > 2*math.pi:
-            pos[3] = pos[3] % (2*math.pi)
-        if pos[3] < -2*math.pi:
-            pos[3] = pos[3] % (-2*math.pi)
-        
+        if enu_pos[3] > 2*math.pi:
+            enu_pos[3] = enu_pos[3] % (2*math.pi)
+        if enu_pos[3] < -2*math.pi:
+            enu_pos[3] = enu_pos[3] % (-2*math.pi)
+
         return True
 
-    def set_absolute_position(self, abs_pos: np.ndarray) -> None:
+    def set_absolute_position(self, abs_pos: list) -> None:
         """
         Set the absolute position of the drone.
-        abs_pos: numpy array of shape (4,) representing in ENU frame (East, North, Up, Yaw).
+        abs_pos: list of shape (4,) representing in ENU frame (East, North, Up, Yaw).
         """
         if not self._ENU_pos_check(abs_pos):
             return
@@ -132,19 +147,19 @@ class OffboardControl(Node):
 
         self.flying = True
 
-    def set_incremental_position(self, inc_pos: np.ndarray) -> None:
+    def set_incremental_position(self, inc_pos: list) -> None:
         """
         Set the incremental position of the drone.
-        increment: numpy array of shape (4,) representing (dEast, dNorth, dUp, dYaw) in ENU frame.
+        increment: list of shape (4,) representing (dEast, dNorth, dUp, dYaw) in ENU frame.
         """
         inc_pos = self._ENU2NED(inc_pos)
 
-        abs_pos = np.array([
+        abs_pos = [
             self._target_x + inc_pos[0],
             self._target_y + inc_pos[1],
             self._target_z + inc_pos[2],
             self._target_yaw + inc_pos[3]
-        ])
+        ]
 
         if not self._ENU_pos_check(self._NED2ENU(abs_pos)):
             return
@@ -171,12 +186,12 @@ class OffboardControl(Node):
     
     def _vehicle_local_position_callback(self, msg: VehicleLocalPositionMsg) -> None:
         self.vehicle_local_position = msg
-        vehicle_local_ned_pos = np.array([
+        vehicle_local_ned_pos = [
             self.vehicle_local_position.x,
             self.vehicle_local_position.y,
             self.vehicle_local_position.z,
             -1
-        ])
+        ]
 
         self.vehicle_local_enu_pos = self._NED2ENU(vehicle_local_ned_pos)
 
@@ -197,17 +212,19 @@ class OffboardControl(Node):
             self._keep_status()
 
             if self.is_gazebo:
+                x = self.scale * (self._target_x - self.gazebo_ned_pos[0])
+                y = self.scale * (self._target_y - self.gazebo_ned_pos[1])
+                z = self._target_z - self.gazebo_ned_pos[2]
                 self._trajectory_setpoint_publisher.publish(
-                    position=(self._target_x - self.gazebo_ned_pos[0],
-                              self._target_y - self.gazebo_ned_pos[1],
-                              self._target_z - self.gazebo_ned_pos[2]),
+                    position=(x, y, z),
                     yaw=self._target_yaw - self.gazebo_ned_pos[3]
                 )
             else:
+                x = self.scale * self._target_x
+                y = self.scale * self._target_y
+                z = self._target_z
                 self._trajectory_setpoint_publisher.publish(
-                    position=(self._target_x,
-                              self._target_y,
-                              self._target_z),
+                    position=(x, y, z),
                     yaw=self._target_yaw
                 )
 
