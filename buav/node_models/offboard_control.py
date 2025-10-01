@@ -10,6 +10,7 @@ from ..publisher.vehicle_command_publisher import VehicleCommandPublisher, Vehic
 from ..receiver.vehicle_status_receiver import VehicleStatusEnum, VehicleStatusReceiver, VehicleStatusMsg
 from ..receiver.vehicle_local_position_receiver import VehicleLocalPositionReceiver, VehicleLocalPositionMsg
 from ..receiver.vehicle_command_ack import VehicleCommandAckReceiver, VehicleCommandAckMsg
+from ..receiver.pointcloud_receiver import PointCloudReceiver, PointCloud2Msg
 
 class OffboardControl(Node):
     """Node for controlling a vehicle in offboard mode."""
@@ -53,6 +54,9 @@ class OffboardControl(Node):
         
         self._vehicle_status_receiver = VehicleStatusReceiver(self, qos_profile, prefix)
         self._vehicle_status_receiver.add_callback(self._vehicle_status_callback)
+
+        self._camera_pointcloud_receiver = PointCloudReceiver(self)
+        self._camera_pointcloud_receiver.add_callback(self._camera_pointcloud_callback)
 
         self.offboard_setpoint_counter = 0
         self.vehicle_local_position = self._vehicle_local_position_receiver.get_simple_msg()
@@ -201,6 +205,9 @@ class OffboardControl(Node):
     def _vehicle_command_ack_callback(self, msg: VehicleCommandAckMsg) -> None:
         pass
     
+    def _camera_pointcloud_callback(self, msg: PointCloud2Msg) -> None:
+        # self.get_logger().info(f'Received PointCloud2 message with {msg.width} width and {msg.height} height.')
+
     def _timer_callback(self) -> None:
         """Callback function for the timer."""
         self._offboard_control_mode_publisher.heartbeat()
