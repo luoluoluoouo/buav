@@ -1,4 +1,6 @@
 import math
+import struct
+import numpy as np
 
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -206,7 +208,113 @@ class OffboardControl(Node):
         pass
     
     def _camera_pointcloud_callback(self, msg: PointCloud2Msg) -> None:
-        # self.get_logger().info(f'Received PointCloud2 message with {msg.width} width and {msg.height} height.')
+        # Process point cloud to get regional distances
+        distances = self._process_pointcloud_distances(msg)
+
+        self.get_logger().info(
+            f"PointCloud Distances - Left: {distances['left']:.2f} m, "
+            f"Left-Center: {distances['left_center']:.2f} m, "
+            f"Center: {distances['center']:.2f} m, "
+            f"Right-Center: {distances['right_center']:.2f} m, "
+            f"Right: {distances['right']:.2f} m"
+        )
+
+    def _process_pointcloud_distances(self, msg: PointCloud2Msg) -> dict:
+        """Process point cloud to calculate left, left_center, center, right_center, right average distances"""
+        try:
+            if msg.height == 0 or msg.width == 0:
+                return {'left': float('inf'), 'left_center': float('inf'), 'center': float('inf'), 
+                       'right_center': float('inf'), 'right': float('inf')}
+            
+            # Find XYZ field offsets
+            x_offset = None
+            y_offset = None  
+            z_offset = None
+            
+            for field in msg.fields:
+                if field.name == 'x':
+                    x_offset = field.offset
+                elif field.name == 'y':
+                    y_offset = field.offset
+                elif field.name == 'z':
+                    z_offset = field.offset
+            
+            if x_offset is None or y_offset is None or z_offset is None:
+                self.get_logger().warn("XYZ fields not found in point cloud")
+                return {'left': float('inf'), 'left_center': float('inf'), 'center': float('inf'), 
+                       'right_center': float('inf'), 'right': float('inf')}
+            
+            # Get middle rows (middle third of the image)
+            n_row = msg.height // 3
+            mid_row = msg.height // 2
+            start_row = max(0, mid_row - n_row // 2)
+            end_row = min(msg.height, mid_row + n_row // 2)
+            
+            # Divide width into five regions
+            region_width = msg.width // 5
+            left_end = region_width
+            left_center_end = 2 * region_width
+            center_end = 3 * region_width
+            right_center_end = 4 * region_width
+            # right region starts from right_center_end to msg.width
+            
+            left_distances = []
+            left_center_distances = []
+            center_distances = []
+            right_center_distances = []
+            right_distances = []
+            
+            # Extract XYZ data from point cloud
+            for row in range(start_row, end_row):
+                for col in range(msg.width):
+                    # Calculate byte offset for this point
+                    point_offset = (row * msg.row_step) + (col * msg.point_step)
+                    
+                    try:
+                        # Extract X, Y, Z coordinates with correct offsets
+                        x = struct.unpack_from('<f', msg.data, point_offset + x_offset)[0]
+                        y = struct.unpack_from('<f', msg.data, point_offset + y_offset)[0]
+                        z = struct.unpack_from('<f', msg.data, point_offset + z_offset)[0]
+                        
+                        # Skip invalid points
+                        if not (np.isfinite(x) and np.isfinite(y) and np.isfinite(z)):
+                            continue
+                        
+                        # Calculate forward distance (Z-axis in camera frame)
+                        distance = abs(z)
+                        
+                        # Skip points that are too close or too far
+                        if distance < 0.1 or distance > 50.0:
+                            continue
+                        
+                        # Classify into regions based on column position
+                        if col < left_end:
+                            left_distances.append(distance)
+                        elif col < left_center_end:
+                            left_center_distances.append(distance)
+                        elif col < center_end:
+                            center_distances.append(distance)
+                        elif col < right_center_end:
+                            right_center_distances.append(distance)
+                        else:
+                            right_distances.append(distance)
+                            
+                    except (struct.error, IndexError):
+                        continue
+            
+            # Calculate averages
+            return {
+                'left': float(np.mean(left_distances)) if left_distances else float('inf'),
+                'left_center': float(np.mean(left_center_distances)) if left_center_distances else float('inf'),
+                'center': float(np.mean(center_distances)) if center_distances else float('inf'),
+                'right_center': float(np.mean(right_center_distances)) if right_center_distances else float('inf'),
+                'right': float(np.mean(right_distances)) if right_distances else float('inf')
+            }
+            
+        except Exception as e:
+            self.get_logger().error(f"Error processing point cloud: {e}")
+            return {'left': float('inf'), 'left_center': float('inf'), 'center': float('inf'), 
+                   'right_center': float('inf'), 'right': float('inf')}
 
     def _timer_callback(self) -> None:
         """Callback function for the timer."""
